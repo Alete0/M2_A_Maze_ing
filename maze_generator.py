@@ -154,14 +154,13 @@ def backtracker(maze: list[list[int]],
 
 
 def generate_maze(maze: list[list[int]]) -> None:
-    location: tuple[int, int] = (random.randint(0, len(maze[0])),
-                                 random.randint(0, len(maze)))
+    location: tuple[int, int] = (random.randint(0, len(maze) - 1),
+                                 random.randint(0, len(maze[0]) - 1))
+    print(location)
 
     visited: list[tuple[int, int]] = []
 
     backtracker(maze, location, visited)
-
-    print(location)
 
 
 if __name__ == "__main__":
@@ -174,8 +173,6 @@ if __name__ == "__main__":
     height: int = int(sys.argv[2])
 
     maze: list[list[int]] = [[15 for _ in range(width)] for _ in range(height)]
-
-    print_maze(maze)
 
     generate_maze(maze)
 
