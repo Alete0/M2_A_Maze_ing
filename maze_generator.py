@@ -158,22 +158,31 @@ def generate_maze(maze: list[list[int]]) -> None:
                                  random.randint(0, len(maze[0]) - 1))
     print(location)
 
-    visited: list[tuple[int, int]] = []
+    # TODO: Include 42 pattern cells inside visited so the generator
+    # never chages this ones
+    visited: list[tuple[int, int]] = [(5, 5), (6, 5), (7, 5)]
 
     backtracker(maze, location, visited)
 
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 3:
-        print("Usage: <width> <height>")
+    if len(sys.argv) < 4:
+        print("Usage: <width> <height> <seed>")
         exit(1)
 
     width: int = int(sys.argv[1])
     height: int = int(sys.argv[2])
+    seed: int = int(sys.argv[3])
+
+    random.seed(seed)
 
     maze: list[list[int]] = [[15 for _ in range(width)] for _ in range(height)]
 
-    generate_maze(maze)
+    try:
+        generate_maze(maze)
+    except Exception as e:
+        print(e)
+        exit(1)
 
     print_maze(maze)

@@ -423,7 +423,7 @@ def flood_fill_connected(grid: Grid, start: Coord) -> set[Coord]: ...
 
 ---
 
-### M3 — Motor de generación (semilla + PERFECT)
+### M3 — Motor de generación (semilla + PERFECT) - czuluaga
 
 - **Objetivo:** generar el laberinto (Recursive Backtracker recomendado) reproducible por semilla.
 - **Entrada:** grid inicial de M2, `perfect: bool`, `Random` con semilla.
@@ -444,7 +444,10 @@ def flood_fill_connected(grid: Grid, start: Coord) -> set[Coord]: ...
 
 ---
 
-### M4 — Inserción del patrón "42" con fallback seguro
+### M4 — Inserción del patrón "42" con fallback seguro - czuluaga
+
+>Se me ha ocurrido que es mejor meter las celdas de 42 en las celdas ya visitadas antes de generar el laberinto \
+de forma que siempre genere el laberinto con rutas validas incluyendo el 42
 
 - **Objetivo:** superponer el patrón "42" con celdas **completamente cerradas** (`0xF`) e inaccesibles.
 - **Entrada:** grid generado, dimensiones.
