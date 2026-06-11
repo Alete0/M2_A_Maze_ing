@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 12:45:24 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/11 14:49:08 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -86,12 +86,11 @@ if __name__ == "__main__":
         exit(1)
 
     config: MazeConfig = load_config(sys.argv[1])
-    maze = MazeGenerator(config.width, config.height)
 
-    try:
-        maze.generate(config.entry)
-    except Exception as e:
-        print(e)
-        exit(1)
+    maze = MazeGenerator(width=config.width,
+                         height=config.height,
+                         seed=config.seed,
+                         perfect=config.perfect)
+    maze.generate(config.entry)
 
     print_maze(maze.get_maze())

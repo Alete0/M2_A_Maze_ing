@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 12:45:04 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/11 15:20:54 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -23,6 +23,7 @@ class MazeGenerator:
         self._height: int = height
         self._seed: int | None = seed
         self._perfect: bool = perfect
+        self._pattern_fits: bool = True
 
     # BITMASKS: class attributes
     NORTH: int = 0b0001
@@ -133,6 +134,39 @@ class MazeGenerator:
             case _:
                 raise Exception("Unknown neighbor, Can't open wall!!")
 
+    def imperfect_walls(self) -> None:
+        # Defining sets needed
+        available_cells: set[tuple[int, int]] = set()
+        pattern_cells: set[tuple[int, int]] = set()
+        maze_cells: set[tuple[int, int]] = set()
+
+        # Get coords for every cell in maze
+        for i in range(self._height):
+            for j in range(self._width):
+                maze_cells.add((i, j))
+
+        if self._pattern_fits:
+            # Get the coords from the pattern cells
+            pattern_cells = set(self.pattern)
+            # get the cells not in 42 pattern with sets difference
+            available_cells = maze_cells.difference(pattern_cells)
+        else:
+            available_cells = maze_cells
+
+        # Choose a random number of walls to open
+        random_cells: list[tuple[int, int]] = list()
+        random_cells = random.sample(available_cells,
+                                     k=random.randint(1, self._width))
+        #   Open a random wall until no more changes needed to be
+        for cell in random_cells:
+            for n in random.sample([0, 1, 2, 3], k=4):
+                n_coords: tuple[int, int] = self.neighbor_coords(cell, n)
+                if n_coords in pattern_cells or self.out_of_bounds(n_coords):
+                    continue
+                else:
+                    self.open_wall(cell, n_coords, n)
+                    break
+
     def backtracker(self,
                     location: tuple[int, int],
                     visited: list[tuple[int, int]]) -> None:
@@ -167,17 +201,18 @@ class MazeGenerator:
         y offset to it's coordinates
 
         Returns:
-            list[tuple[int, int]]: Returns a copy of the pattern after offset
+            list[tuple[int, int]]: Returns the pattern after offset
             has been applied.
         """
         # If maze is too small 42 pattern does not fit
         if self._height < 7 or self._width < 9:
+            self._pattern_fits = False
             return []
 
         # Else calculate offset to apply to default pattern
         x_offset: int = int(self._width / 2) - 3
         y_offset: int = int(self._height / 2) - 2
-        print(x_offset, y_offset)
+
         self.pattern = [(cell[0] + y_offset, cell[1] + x_offset)
                         for cell in self.pattern]
         return self.pattern
@@ -189,11 +224,20 @@ class MazeGenerator:
         Args:
             start (tuple[int, int]): Starting point of the maze
         """
+        if self._seed:
+            random.seed(self._seed)
 
-        visited: list[tuple[int, int]] = []
-        visited += self.pattern_42()
-
-        self.backtracker(entry, visited)
+        try:
+            # TODO: Check if entry or exit is a cell from the 42 pattern
+            visited: list[tuple[int, int]] = []
+            visited += self.pattern_42()
+            self.backtracker(entry, visited)
+        except Exception as e:
+            print(e)
+            exit(1)
+        # After generation, if PERFECT is false -> open some walls
+        if self._perfect is False:
+            self.imperfect_walls()
 
     def get_maze(self) -> list[list[int]]:
         return self._maze
