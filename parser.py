@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+# ########################################################################### #
+#   shebang: 1                                                                #
+#                                                          :::      ::::::::  #
+#   config.py                                            :+:      :+:    :+:  #
+#                                                      +:+ +:+         +:+    #
+#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#                                                  +#+#+#+#+#+   +#+          #
+#   Created: 2026/06/11 10:09:18 by czuluaga            #+#    #+#            #
+#   Updated: 2026/06/11 10:09:19 by czuluaga           ###   ########.fr      #
+#                                                                             #
+# ########################################################################### #
+
 import sys
 from dataclasses import dataclass
 from typing import Tuple, Optional
