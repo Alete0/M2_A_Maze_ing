@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 15:20:54 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/11 15:25:20 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -156,7 +156,7 @@ class MazeGenerator:
         # Choose a random number of walls to open
         random_cells: list[tuple[int, int]] = list()
         random_cells = random.sample(available_cells,
-                                     k=random.randint(1, self._width))
+                                     k=random.randint(1, len(available_cells)))
         #   Open a random wall until no more changes needed to be
         for cell in random_cells:
             for n in random.sample([0, 1, 2, 3], k=4):

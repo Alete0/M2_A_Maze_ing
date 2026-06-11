@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 14:49:08 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/11 15:35:52 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -80,6 +80,8 @@ def print_maze(maze: list[list[int]]) -> None:
 
 
 if __name__ == "__main__":
+
+    sys.setrecursionlimit(3500)
 
     if len(sys.argv) != 2:
         print("Usage: <config_file>")
