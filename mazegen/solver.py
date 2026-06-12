@@ -7,9 +7,12 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/12 10:50:56 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/12 13:35:49 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/12 15:07:19 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
+
+import sys
+
 
 class MazeSolver:
     def __init__(self, width: int, height: int) -> None:
@@ -81,19 +84,27 @@ class MazeSolver:
 
     def solve(self,
               maze: list[list[int]],
-              entry: tuple[int, int], exit: tuple[int, int]):
+              entry: tuple[int, int],
+              exit: tuple[int, int]) -> None:
 
         # Init vars needed
         queue: list[tuple[int, int]] = []
         visited: list[tuple[int, int]] = []
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {}
+
+        parent[entry] = None
 
         queue.append(entry)
 
         while queue:
             cell: tuple[int, int] = queue.pop(0)
 
-            if cell is exit:
-                break
+            if cell == exit:
+                current: tuple[int, int] | None = exit
+                while current is not None:
+                    self._path_cell.insert(0, current)
+                    current = parent[current]
+                return
 
             visited.append(cell)
 
@@ -103,6 +114,34 @@ class MazeSolver:
             for neighbor in neighbors:
                 n: tuple[int, int] = self.neighbor_coords(cell, neighbor)
                 if n not in visited and not self.out_of_bounds(n):
+                    parent[n] = cell
                     queue.append(n)
 
-        pass
+    @staticmethod
+    def direction(current: tuple[int, int], next: tuple[int, int]) -> str:
+        row_c, col_c = current
+        row_n, col_n = next
+
+        if row_c == row_n:
+            if col_c < col_n:
+                return "E"
+            else:
+                return "W"
+        elif row_c < row_n:
+            return "N"
+        else:
+            return "S"
+
+    def get_directions(self) -> str:
+        if not self._path_cell:
+            raise Exception("No solutions available for the maze")
+
+        directions: str = ""
+
+        for i in range(len(self._path_cell) - 1):
+            directions += self.direction(self._path_cell[i],
+                                         self._path_cell[i + 1])
+
+        self._directions = directions
+
+        return directions
