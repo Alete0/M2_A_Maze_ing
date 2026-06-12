@@ -4,16 +4,18 @@
 #                                                          :::      ::::::::  #
 #   a_maze_ing.py                                        :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 15:35:52 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/12 13:32:52 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
 import sys
 from mazegen import MazeGenerator
 from parser import MazeConfig, load_config
+from typing import Set, Tuple
+from encoder import gen_maze_file
 
 # BITMASKS
 NORTH: int = 0b0001
@@ -22,7 +24,48 @@ SOUTH: int = 0b0100
 WEST:  int = 0b1000
 
 
-def print_maze(maze: list[list[int]]) -> None:
+# Type alias matching your project specifications
+Coord = Tuple[int, int]
+
+
+def path_to_exit(entry: Coord, path_str: str) -> Set[Coord]:
+    """
+    Converts a cardinal direction path string into a set of grid coordinates.
+
+    Args:
+        entry: Starting coordinate tuple as (row, col).
+        path_str: String containing the sequence of steps (e.g., "NESW").
+
+    Returns:
+        Set[Coord]: A set containing all (row, col) coordinates visited by the
+                    path, including the initial entry point.
+    """
+    # Initialize the set with the entry point
+    visited_coordinates: Set[Coord] = {entry}
+
+    current_row, current_col = entry
+
+    # Process each cardinal character to track the exact movement
+    for direction in path_str:
+        if direction == 'N':
+            current_row -= 1
+        elif direction == 'E':
+            current_col += 1
+        elif direction == 'S':
+            current_row += 1
+        elif direction == 'W':
+            current_col -= 1
+        else:
+            # Skip any unexpected characters gracefully without crashing
+            continue
+
+        # Add the newly reached coordinate to our path tracker
+        visited_coordinates.add((current_row, current_col))
+
+    return visited_coordinates
+
+
+def print_maze(maze: list[list[int]], entry: Coord) -> None:
     """
     Print a maze using ASCII characters.
     Each cell is represented by a 4-bit value where each bit represents a wall:
@@ -34,6 +77,8 @@ def print_maze(maze: list[list[int]]) -> None:
     """
     height = len(maze)
     width = len(maze[0]) if height > 0 else 0
+    # TODO: AQUI METER EL STR DE LA SOLUCION
+    solution_cells = path_to_exit(entry, "SSW")
 
     # Build the ASCII maze
     # Each cell takes 3x3 characters: corners, walls, and the cell space
@@ -58,7 +103,11 @@ def print_maze(maze: list[list[int]]) -> None:
                 line += "|"
             else:
                 line += " "
-            line += "   "
+            current_cell = (row_idx, col_idx)
+            if current_cell in solution_cells:
+                line += " . "
+            else:
+                line += "   "
         # Final EAST wall of the rightmost cell
         if maze[row_idx][width - 1] & EAST:
             line += "|"
@@ -94,5 +143,7 @@ if __name__ == "__main__":
                          seed=config.seed,
                          perfect=config.perfect)
     maze.generate(config.entry)
-
-    print_maze(maze.get_maze())
+    # TODO: PASAR LA STR DE SOLUCION A GEN MAZE FILE
+    gen_maze_file(config.output_file, maze.get_maze(), config.entry,
+                  config.exit)
+    print_maze(maze.get_maze(), config.entry)
