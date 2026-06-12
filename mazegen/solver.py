@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/12 10:50:56 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/12 15:09:13 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/12 15:19:47 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -126,9 +126,9 @@ class MazeSolver:
             else:
                 return "W"
         elif row_c < row_n:
-            return "N"
-        else:
             return "S"
+        else:
+            return "N"
 
     def get_directions(self) -> str:
         if not self._path_cell:

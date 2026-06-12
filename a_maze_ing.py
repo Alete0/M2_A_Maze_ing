@@ -4,15 +4,15 @@
 #                                                          :::      ::::::::  #
 #   a_maze_ing.py                                        :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/12 13:32:52 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/12 15:28:27 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
 import sys
-from mazegen import MazeGenerator
+from mazegen import MazeGenerator, MazeSolver
 from parser import MazeConfig, load_config
 from typing import Set, Tuple
 from encoder import gen_maze_file
@@ -65,7 +65,7 @@ def path_to_exit(entry: Coord, path_str: str) -> Set[Coord]:
     return visited_coordinates
 
 
-def print_maze(maze: list[list[int]], entry: Coord) -> None:
+def print_maze(maze: list[list[int]], entry: Coord, solution: str) -> None:
     """
     Print a maze using ASCII characters.
     Each cell is represented by a 4-bit value where each bit represents a wall:
@@ -77,8 +77,7 @@ def print_maze(maze: list[list[int]], entry: Coord) -> None:
     """
     height = len(maze)
     width = len(maze[0]) if height > 0 else 0
-    # TODO: AQUI METER EL STR DE LA SOLUCION
-    solution_cells = path_to_exit(entry, "SSW")
+    solution_cells = path_to_exit(entry, solution)
 
     # Build the ASCII maze
     # Each cell takes 3x3 characters: corners, walls, and the cell space
@@ -142,8 +141,20 @@ if __name__ == "__main__":
                          height=config.height,
                          seed=config.seed,
                          perfect=config.perfect)
-    maze.generate(config.entry)
+    maze_solution = MazeSolver(config.width, config.height)
+
+    entry: tuple[int, int] = (config.entry[1], config.entry[0])
+    exit: tuple[int, int] = (config.exit[1], config.exit[0])
+
+    maze.generate(entry)
+
+    maze_solution.solve(maze.get_maze(), entry, exit)
+
+    directions: str = maze_solution.get_directions()
+    print(directions)
+
     # TODO: PASAR LA STR DE SOLUCION A GEN MAZE FILE
     gen_maze_file(config.output_file, maze.get_maze(), config.entry,
-                  config.exit)
-    print_maze(maze.get_maze(), config.entry)
+                  config.exit, path_solution=directions)
+
+    print_maze(maze.get_maze(), config.entry, directions)
