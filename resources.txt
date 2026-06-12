@@ -1,2 +1,3 @@
 https://www.cs.cmu.edu/~112-n22/notes/student-tp-guides/Mazes.pdf
 https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap.html
+https://medium.com/@luthfisauqi17_68455/artificial-intelligence-search-problem-solve-maze-using-breadth-first-search-bfs-algorithm-255139c6e1a3
