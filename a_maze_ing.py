@@ -7,7 +7,7 @@
 #   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/13 15:30:22 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/13 15:36:23 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -79,7 +79,7 @@ def print_maze(maze: list[list[int]], entry: Coord, exit: Coord,
 
     # Local reset constant to prevent color bleeding into the menu
     RESET = "\033[0m"
-    PATH_COLOR = "\033[38;2;255;255;0m"
+    PATH_COLOR = "\033[33m"
 
     height = len(maze)
     width = len(maze[0]) if height > 0 else 0
