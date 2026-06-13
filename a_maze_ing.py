@@ -7,7 +7,7 @@
 #   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/13 15:36:23 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/13 15:47:30 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -160,7 +160,7 @@ def setup_new_maze(config: MazeConfig, use_seed: bool = True):
     entry_coord = (config.entry[1], config.entry[0])
     exit_coord = (config.exit[1], config.exit[0])
 
-    maze.generate(entry_coord)
+    maze.generate(entry_coord, exit_coord)
 
     # 3. Instantiate solver and find the shortest path
     maze_solution = MazeSolver(config.width, config.height)
