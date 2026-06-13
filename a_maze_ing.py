@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   a_maze_ing.py                                        :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/12 15:28:27 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/13 12:02:02 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -65,7 +65,8 @@ def path_to_exit(entry: Coord, path_str: str) -> Set[Coord]:
     return visited_coordinates
 
 
-def print_maze(maze: list[list[int]], entry: Coord, solution: str) -> None:
+def print_maze(maze: list[list[int]], entry: Coord, solution: str,
+               print_path: bool, color: str) -> None:
     """
     Print a maze using ASCII characters.
     Each cell is represented by a 4-bit value where each bit represents a wall:
@@ -75,6 +76,11 @@ def print_maze(maze: list[list[int]], entry: Coord, solution: str) -> None:
     - bit 3 (WEST): wall to the left
     If bit is 1, wall is closed. If bit is 0, wall is open.
     """
+
+    # Local reset constant to prevent color bleeding into the menu
+    RESET = "\033[0m"
+    PATH_COLOR = "\033[38;2;255;255;0m"
+
     height = len(maze)
     width = len(maze[0]) if height > 0 else 0
     solution_cells = path_to_exit(entry, solution)
@@ -85,13 +91,13 @@ def print_maze(maze: list[list[int]], entry: Coord, solution: str) -> None:
         # Print top walls of the current row
         line = ""
         for col_idx in range(width):
-            line += "+"
+            line += color + "█" + RESET
             # Check if NORTH wall is closed
             if maze[row_idx][col_idx] & NORTH:
-                line += "---"
+                line += color + "███" + RESET
             else:
                 line += "   "
-        line += "+"
+        line += color + "█" + RESET
         print(line)
 
         # Print the middle line with side walls and cell space
@@ -99,17 +105,21 @@ def print_maze(maze: list[list[int]], entry: Coord, solution: str) -> None:
         for col_idx in range(width):
             # Check if WEST wall is closed
             if maze[row_idx][col_idx] & WEST:
-                line += "|"
+                line += color + "█" + RESET
             else:
                 line += " "
             current_cell = (row_idx, col_idx)
-            if current_cell in solution_cells:
-                line += " . "
+            if current_cell == config.entry:
+                line += " E "
+            elif current_cell == config.exit:
+                line += " X "
+            elif current_cell in solution_cells and print_path:
+                line += PATH_COLOR + " ● " + RESET
             else:
                 line += "   "
         # Final EAST wall of the rightmost cell
         if maze[row_idx][width - 1] & EAST:
-            line += "|"
+            line += color + "█" + RESET
         else:
             line += " "
         print(line)
@@ -117,18 +127,50 @@ def print_maze(maze: list[list[int]], entry: Coord, solution: str) -> None:
     # Print bottom walls of the last row
     line = ""
     for col_idx in range(width):
-        line += "+"
+        line += color + "█" + RESET
         # Check if SOUTH wall is closed (only for last row)
         if maze[height - 1][col_idx] & SOUTH:
-            line += "---"
+            line += color + "███" + RESET
         else:
             line += "   "
-    line += "+"
+    line += color + "█" + RESET
     print(line)
 
 
-if __name__ == "__main__":
+# Helper function to encapsulate maze creation and solving logic
+def setup_new_maze(config: MazeConfig, use_seed: bool = True):
+    """
+    Instantiates, generates, and solves a maze based on the configuration.
+    Allows disabling the seed for random re-generation.
+    """
+    # If use_seed is True, use the config seed; otherwise,
+    # force None for true randomness
+    current_seed = config.seed if use_seed else None
 
+    # 1. Create the generator instance
+    maze = MazeGenerator(
+        width=config.width,
+        height=config.height,
+        seed=current_seed,
+        perfect=config.perfect
+    )
+
+    # 2. Adjust coordinate axes if necessary and dig the walls
+    # Assuming internal matrix notation (row, col)
+    entry_coord = (config.entry[1], config.entry[0])
+    exit_coord = (config.exit[1], config.exit[0])
+
+    maze.generate(entry_coord)
+
+    # 3. Instantiate solver and find the shortest path
+    maze_solution = MazeSolver(config.width, config.height)
+    maze_solution.solve(maze.get_maze(), entry_coord, exit_coord)
+
+    # Return both the configured engine and the calculated path directions
+    return maze, maze_solution.get_directions()
+
+
+if __name__ == "__main__":
     sys.setrecursionlimit(3500)
 
     if len(sys.argv) != 2:
@@ -137,24 +179,52 @@ if __name__ == "__main__":
 
     config: MazeConfig = load_config(sys.argv[1])
 
-    maze = MazeGenerator(width=config.width,
-                         height=config.height,
-                         seed=config.seed,
-                         perfect=config.perfect)
-    maze_solution = MazeSolver(config.width, config.height)
+    # FIRST CALL: Initial setup using the file's original seed
+    maze, directions = setup_new_maze(config, use_seed=True)
 
-    entry: tuple[int, int] = (config.entry[1], config.entry[0])
-    exit: tuple[int, int] = (config.exit[1], config.exit[0])
-
-    maze.generate(entry)
-
-    maze_solution.solve(maze.get_maze(), entry, exit)
-
-    directions: str = maze_solution.get_directions()
-    print(directions)
-
-    # TODO: PASAR LA STR DE SOLUCION A GEN MAZE FILE
+    # Save initial file setup
     gen_maze_file(config.output_file, maze.get_maze(), config.entry,
                   config.exit, path_solution=directions)
 
-    print_maze(maze.get_maze(), config.entry, directions)
+    # Static list of ANSI escape codes for the wall colors
+    # 34m = Blue, 32m = Green, 35m = Magenta, 36m = Cyan, 31m = Red
+    WALL_COLORS = ["\033[34m", "\033[32m", "\033[35m", "\033[36m", "\033[31m"]
+    ANSI_RESET = "\033[0m"
+
+    # State variable to track the active color index
+    current_color_idx = 0
+
+    show_path = True
+
+    while True:
+        print_maze(
+            maze.get_maze(),
+            config.entry,
+            directions,
+            show_path,
+            WALL_COLORS[current_color_idx]
+        )
+
+        print("=== A-Maze-ing ===")
+        print("1. Re-generate a new maze")
+        print("2. Show/Hide path from entry to exit")
+        print("3. Rotate maze colors")
+        print("4. Quit")
+
+        choice = input("Choice? (1-4): ").strip()
+
+        if choice == "1":
+            # Passing use_seed=False guarantees a completely fresh layout
+            maze, directions = setup_new_maze(config, use_seed=False)
+            print("New maze generated successfully!")
+        elif choice == "2":
+            show_path = not show_path
+        elif choice == "3":
+            # Rotate color index safely using modular arithmetic
+            current_color_idx = (current_color_idx + 1) % len(WALL_COLORS)
+            print("Maze color rotated successfully!")
+        elif choice == "4":
+            print("See you soon!")
+            break
+        else:
+            print("Invalid option. Try again")
