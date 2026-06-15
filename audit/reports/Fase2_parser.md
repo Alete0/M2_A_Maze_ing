@@ -11,7 +11,7 @@ python audit/run_audit.py (phase2)
 **P4** exit=1 stderr="Validation error on the cofiguration values: ENTRY and EXIT can't be identical. They must be different cells."
 **P5** exit=1 stderr="Validation error on the cofiguration values: PERFECT must be a boolean value ('True' or 'False')."
 **P6** exit=1 stderr="Critical error reading the file: Line 2: Format invalid. Missing '='."
-**P7** exit=1 stderr="Error: Configuration file 'C:\\Users\\alete\\Documents\\03_Coding\\42Malaga\\amazing\\audit\\configs\\does_not_exist_xyz.txt' not found."
+**P7** exit=1 stderr="Error: Configuration file '/home/alejandr/M2/Amazing_GHIT/audit/configs/does_not_exist_xyz.txt' not found."
 **P8** exit=0 stderr=''
 ### Hallazgos
 - Ninguno

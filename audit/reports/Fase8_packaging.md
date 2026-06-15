@@ -5,7 +5,6 @@
 python -m build
 ```
 ### Evidencia
-WARNING Both NO_COLOR and FORCE_COLOR environment variables are set, disabling color
 Successfully built mazegen-0.1.0.tar.gz and mazegen-0.1.0-py3-none-any.whl
 * Creating isolated environment: venv+pip...
 * Installing packages in isolated environment:
