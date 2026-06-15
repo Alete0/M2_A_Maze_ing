@@ -29,6 +29,8 @@ WEST:  int = 0b1000
 # Type alias matching your project specifications
 Coord = Tuple[int, int]
 
+PATTERN_COLOR = "\033[90m"
+
 
 def path_to_exit(entry: Coord, path_str: str) -> Set[Coord]:
     """
@@ -68,7 +70,8 @@ def path_to_exit(entry: Coord, path_str: str) -> Set[Coord]:
 
 
 def print_maze(maze: list[list[int]], entry: Coord, exit: Coord,
-               solution: str, print_path: bool, color: str) -> None:
+               solution: str, print_path: bool, color: str,
+               pattern_cells: Set[Coord]) -> None:
     """
     Print a maze using ASCII characters.
     Each cell is represented by a 4-bit value where each bit represents a wall:
@@ -117,6 +120,8 @@ def print_maze(maze: list[list[int]], entry: Coord, exit: Coord,
                 line += " X "
             elif current_cell in solution_cells and print_path:
                 line += PATH_COLOR + " ● " + RESET
+            elif current_cell in pattern_cells:
+                line += PATTERN_COLOR + "███" + RESET
             else:
                 line += "   "
         # Final EAST wall of the rightmost cell
@@ -232,13 +237,17 @@ if __name__ == "__main__":
     exit_coord = (config.exit[1], config.exit[0])
 
     while True:
+        pattern_cells = (
+            set(maze.pattern) if maze._pattern_fits else set()
+        )
         print_maze(
             maze.get_maze(),
             entry_coord,
             exit_coord,
             directions,
             show_path,
-            WALL_COLORS[current_color_idx]
+            WALL_COLORS[current_color_idx],
+            pattern_cells,
         )
 
         print("=== A-Maze-ing ===")
