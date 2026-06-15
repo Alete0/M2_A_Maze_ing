@@ -45,7 +45,7 @@ def test_setup_new_maze_swaps_config_xy_to_row_col():
 
 def test_print_maze_shows_entry_and_exit(capsys):
     maze = [[0b0101, 0b0101], [0b1111, 0b1111]]
-    print_maze(maze, (0, 0), (0, 1), "", False, "\033[34m")
+    print_maze(maze, (0, 0), (0, 1), "", False, "\033[34m", set())
     out = capsys.readouterr().out
     assert " E " in out
     assert " X " in out
@@ -56,23 +56,23 @@ def test_print_maze_shows_path_marker(capsys):
         [0b0101, 0b0101, 0b0101],
         [0b1111, 0b1111, 0b1111],
     ]
-    print_maze(maze, (0, 0), (0, 2), "E", True, "\033[34m")
+    print_maze(maze, (0, 0), (0, 2), "E", True, "\033[34m", set())
     out = capsys.readouterr().out
     assert "●" in out
 
 
 def test_print_maze_different_colors(capsys):
     maze = [[0b1111]]
-    print_maze(maze, (0, 0), (0, 0), "", False, "\033[31m")
+    print_maze(maze, (0, 0), (0, 0), "", False, "\033[31m", set())
     red_out = capsys.readouterr().out
-    print_maze(maze, (0, 0), (0, 0), "", False, "\033[32m")
+    print_maze(maze, (0, 0), (0, 0), "", False, "\033[32m", set())
     green_out = capsys.readouterr().out
     assert "\033[31m" in red_out
     assert "\033[32m" in green_out
 
 
 def test_print_maze_single_cell_no_crash(capsys):
-    print_maze([[15]], (0, 0), (0, 0), "", False, "\033[34m")
+    print_maze([[15]], (0, 0), (0, 0), "", False, "\033[34m", set())
     assert capsys.readouterr().out
 
 
@@ -146,13 +146,16 @@ def test_menu_quit_via_mock_input(capsys):
     maze, directions = setup_new_maze(cfg)
     entry = (cfg.entry[1], cfg.entry[0])
     exit_c = (cfg.exit[1], cfg.exit[0])
+    pattern_cells = (
+        set(maze.pattern) if maze._pattern_fits else set()
+    )
 
     with patch("builtins.input", side_effect=["2", "4"]):
         show_path = True
         while True:
             print_maze(
                 maze.get_maze(), entry, exit_c, directions,
-                show_path, "\033[34m",
+                show_path, "\033[34m", pattern_cells,
             )
             choice = __import__("builtins").input("Choice? ")
             if choice == "2":
