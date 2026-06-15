@@ -53,3 +53,72 @@ maze_grid = generator.get_maze()
 solver = MazeSolver(width=15, height=15)
 solver.solve(maze_grid, entry=(0, 0), exit=(14, 14))
 solution = solver.get_directions() # Returns 'N', 'E', 'S', 'W' path string
+```
+
+## Resources
+
+### References
+
+- [Mazes — CMU student guide](https://www.cs.cmu.edu/~112-n22/notes/student-tp-guides/Mazes.pdf) — maze representation, wall encoding, and general maze concepts.
+- [Maze generation algorithm recap — Jamis Buck](https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap.html) — overview of maze generation algorithms; we used this to choose and justify Recursive Backtracker.
+- [Solve a maze with BFS — Medium article](https://medium.com/@luthfisauqi17_68455/artificial-intelligence-search-problem-solve-maze-using-breadth-first-search-bfs-algorithm-255139c6e1a3) — shortest-path search; informed our BFS-based `MazeSolver`.
+
+### Use of AI
+
+We used **Google Gemini** as a helper assistant during the project. It did **not** write or modify production code.
+
+Gemini helped us with:
+
+- **Clarifying concepts** — wall bitmasks (N/E/S/W), perfect vs imperfect mazes, the "42" pattern constraints, and coordinate conventions (config `x,y` vs internal `row,col`).
+- **Tests** — ideas for edge cases and test structure in `tests/`; we reviewed and wrote the final assertions ourselves.
+- **Documentation** — drafting and improving parts of this README and related project documentation.
+
+All application logic (`parser.py`, `encoder.py`, `mazegen/`, `a_maze_ing.py`) was implemented and understood by the team without AI-generated code.
+
+## Team Management
+
+### Roles
+
+| Area | Primary owner | Notes |
+|------|---------------|-------|
+| `mazegen/generator.py` | **czuluaga** | Recursive Backtracker, pattern 42, density rules, perfect/imperfect modes |
+| `mazegen/solver.py` | **czuluaga** | BFS shortest path, N/E/S/W direction string |
+| `parser.py` | **alejandr** | Config format, validation, error handling |
+| `tests/` | **alejandr** | Unit and integration tests across all modules |
+| ASCII rendering & interactive menu (`a_maze_ing.py`) | **Both** | Terminal display, path toggle, colors, menu |
+| `encoder.py` | **Both** | Hex output format and integration with the pipeline |
+| `Makefile`, `pyproject.toml`, packaging | **Both** | Install, lint, build, wheel generation |
+| `README.md` | **Both** | Project documentation |
+
+### Planning
+
+Before writing code, we planned the full architecture in detail: module split, data flow (config → generation → solving → encoding → display), mandatory subject constraints, and the order of implementation. That upfront planning kept responsibilities clear and reduced rework.
+
+Implementation order:
+
+1. Configuration parser and default `config.txt`
+2. Reusable maze core in `mazegen` (generation and solving)
+3. Hex encoder and output validation
+4. CLI, ASCII rendering, and interactive menu
+5. Package build and test suite
+
+As the project evolved, we adjusted timing on tests and packaging, but the original module boundaries stayed the same.
+
+### Coordination
+
+We are both on-site 42 students and coordinated **in person** during lab sessions: short syncs on progress, pair reviews on tricky parts (pattern 42, bidirectional walls, output format), and git-based integration of each other's work.
+
+### What worked / what we would improve
+
+**Worked well:** planning before coding; isolating `mazegen` from the CLI; tests catching regressions early; Recursive Backtracker matching the perfect-maze requirement.
+
+**To improve:** run full-project `make lint` earlier; finalize README sections (Resources, team roles) during development, not at the end.
+
+### Tools
+
+- **Git** — version control and integration of features
+- **Python 3.10+** — language and type hints
+- **pytest** — local test suite
+- **flake8 / mypy** — linting (`make lint`)
+- **python -m build** — `mazegen` wheel and sdist
+- **In-person coordination** — planning and reviews during 42 campus sessions

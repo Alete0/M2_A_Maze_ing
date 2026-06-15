@@ -31,3 +31,4 @@ lint-strict:
 
 build: clean
 	$(PYTHON) -m build
+	cp dist/mazegen-*.whl .
