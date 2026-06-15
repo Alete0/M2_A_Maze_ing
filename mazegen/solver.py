@@ -12,6 +12,10 @@
 # ########################################################################### #
 
 
+class NoSolutionError(Exception):
+    """Raised when no path exists between entry and exit."""
+
+
 class MazeSolver:
     def __init__(self, width: int, height: int) -> None:
         self._directions: str = ""
@@ -133,7 +137,9 @@ class MazeSolver:
 
     def get_directions(self) -> str:
         if not self._path_cell:
-            raise Exception("No solutions available for the maze")
+            raise NoSolutionError(
+                "No solutions available for the maze"
+            )
 
         directions: str = ""
 

@@ -11,7 +11,7 @@ from conftest import (
     walk_path,
 )
 from mazegen.generator import MazeGenerator
-from mazegen.solver import MazeSolver
+from mazegen.solver import MazeSolver, NoSolutionError
 
 
 @pytest.mark.parametrize(
@@ -71,7 +71,7 @@ def test_solve_disconnected_no_path():
     solver = MazeSolver(3, 3)
     solver.solve(MOCK_GRID_DISCONNECTED, (0, 0), (2, 2))
     assert solver._path_cell == []
-    with pytest.raises(Exception, match="No solutions"):
+    with pytest.raises(NoSolutionError, match="No solutions"):
         solver.get_directions()
 
 

@@ -13,6 +13,7 @@
 
 import sys
 from mazegen import MazeGenerator, MazeSolver
+from mazegen.solver import NoSolutionError
 from parser import MazeConfig, load_config
 from typing import Set, Tuple
 from encoder import gen_maze_file
@@ -172,6 +173,16 @@ def setup_new_maze(
     return maze, maze_solution.get_directions()
 
 
+_NO_PATH_MSG = (
+    "No path from ENTRY to EXIT in the generated maze."
+)
+
+
+def _report_fatal_error(message: str) -> None:
+    print(f"Error: {message}", file=sys.stderr)
+    sys.exit(1)
+
+
 def save_output(
     config: MazeConfig, maze: MazeGenerator, directions: str
 ) -> None:
@@ -195,7 +206,13 @@ if __name__ == "__main__":
     config: MazeConfig = load_config(sys.argv[1])
 
     # FIRST CALL: Initial setup using the file's original seed
-    maze, directions = setup_new_maze(config, use_seed=True)
+    try:
+        maze, directions = setup_new_maze(config, use_seed=True)
+    except NoSolutionError:
+        _report_fatal_error(_NO_PATH_MSG)
+    except Exception as exc:
+        _report_fatal_error(str(exc))
+
     save_output(config, maze, directions)
 
     # Static list of ANSI escape codes for the wall colors
@@ -231,7 +248,14 @@ if __name__ == "__main__":
 
         if choice == "1":
             # Passing use_seed=False guarantees a completely fresh layout
-            maze, directions = setup_new_maze(config, use_seed=False)
+            try:
+                maze, directions = setup_new_maze(config, use_seed=False)
+            except NoSolutionError:
+                print(f"Error: {_NO_PATH_MSG}", file=sys.stderr)
+                continue
+            except Exception as exc:
+                print(f"Error: {exc}", file=sys.stderr)
+                continue
             save_output(config, maze, directions)
             print("New maze generated successfully!")
         elif choice == "2":
