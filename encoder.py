@@ -17,7 +17,7 @@ def gen_maze_file(
         path_solution: str = ""
 ) -> None:
     try:
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', newline='\n', encoding='utf-8') as f:
             for row in maze:
                 f.write(line_to_hex(row) + "\n")
             f.write("\n")

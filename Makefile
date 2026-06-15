@@ -1,12 +1,14 @@
 PYTHON = python3
 MAIN = a_maze_ing.py
-CONFIG = config_maze.txt
+CONFIG = config.txt
 
-.PHONY: install run debug clean lint lint-strict build
+.PHONY: install run debug clean lint lint-strict build test
 
 install:
-	$(PYTHON) -m pip install -e .
-	$(PYTHON) -m pip install flake8 mypy build
+	$(PYTHON) -m pip install -e ".[dev]"
+
+test:
+	$(PYTHON) -m pytest tests/ -v
 
 run:
 	$(PYTHON) $(MAIN) $(CONFIG)

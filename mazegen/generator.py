@@ -230,7 +230,7 @@ class MazeGenerator:
         Args:
             start (tuple[int, int]): Starting point of the maze
         """
-        if self._seed:
+        if self._seed is not None:
             random.seed(self._seed)
 
         try:

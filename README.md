@@ -8,13 +8,13 @@ A parametric and interactive maze generator written in Python. This program pars
 ## Instructions
 The project uses a `Makefile` for standard operations.
 - **Install dependencies:** `make install`
-- **Run the program:** `make run` (Executes `python3 a_maze_ing.py config_maze.txt`)
+- **Run the program:** `make run` (Executes `python3 a_maze_ing.py config.txt`)
 - **Debug mode:** `make debug`
 - **Lint the codebase:** `make lint` (Runs `flake8` and strict `mypy`)
 - **Build the reusable package:** `make build` (Generates `.whl` and `.tar.gz` in the `dist/` directory)
 
 ## Configuration File Format
-The program reads a plain text file (default: `config_maze.txt`). Lines starting with `#` are ignored. The format relies on `KEY=VALUE` pairs.
+The program reads a plain text file (default: `config.txt`). Lines starting with `#` are ignored. The format relies on `KEY=VALUE` pairs.
 
 **Mandatory Keys:**
 - `WIDTH`: Maze width in cells (e.g., `WIDTH=12`).
