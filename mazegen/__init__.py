@@ -11,6 +11,8 @@
 #                                                                             #
 # ########################################################################### #
 
+"""Reusable maze generation and solving package for the A-Maze-ing project."""
+
 from .generator import MazeGenerator
 from .solver import MazeSolver
 

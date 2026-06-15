@@ -41,7 +41,7 @@ def _write_config(tmp_path: Path, **overrides: str) -> Path:
     return path
 
 
-def test_pipeline_programatic(tmp_path):
+def test_pipeline_programatic(tmp_path: Path) -> None:
     """load_config → setup_new_maze → gen_maze_file → parse output."""
     cfg_path = _write_config(tmp_path)
     cfg = load_config(str(cfg_path))
@@ -60,7 +60,7 @@ def test_pipeline_programatic(tmp_path):
     assert walk_path(grid, internal_entry, path_str) == internal_exit
 
 
-def test_output_file_blank_line_and_newlines(tmp_path):
+def test_output_file_blank_line_and_newlines(tmp_path: Path) -> None:
     cfg_path = _write_config(tmp_path)
     cfg = load_config(str(cfg_path))
     maze, directions = setup_new_maze(cfg)
@@ -71,7 +71,7 @@ def test_output_file_blank_line_and_newlines(tmp_path):
     assert lines[cfg.height] == ""
 
 
-def test_output_passes_validator(tmp_path):
+def test_output_passes_validator(tmp_path: Path) -> None:
     cfg_path = _write_config(tmp_path)
     cfg = load_config(str(cfg_path))
     maze, directions = setup_new_maze(cfg)
@@ -82,7 +82,9 @@ def test_output_passes_validator(tmp_path):
 
 
 @pytest.mark.parametrize("seed", [1, 7, 42, 99, 123])
-def test_multiple_seeds_pass_validator_and_invariants(tmp_path, seed):
+def test_multiple_seeds_pass_validator_and_invariants(
+    tmp_path: Path, seed: int,
+) -> None:
     cfg_path = _write_config(tmp_path, SEED=str(seed))
     cfg = load_config(str(cfg_path))
     maze, directions = setup_new_maze(cfg)
@@ -97,7 +99,7 @@ def test_multiple_seeds_pass_validator_and_invariants(tmp_path, seed):
         check_no_3x3_open(grid)
 
 
-def test_perfect_true_and_false_both_valid(tmp_path):
+def test_perfect_true_and_false_both_valid(tmp_path: Path) -> None:
     for perfect in ("True", "False"):
         cfg_path = _write_config(
             tmp_path,
@@ -114,7 +116,7 @@ def test_perfect_true_and_false_both_valid(tmp_path):
         assert code == 0
 
 
-def test_cli_subprocess_generates_file(tmp_path):
+def test_cli_subprocess_generates_file(tmp_path: Path) -> None:
     out_file = tmp_path / "cli_maze.txt"
     cfg = _write_config(tmp_path, OUTPUT_FILE=str(out_file))
     import os
@@ -138,7 +140,7 @@ def test_cli_subprocess_generates_file(tmp_path):
     assert code == 0, msg
 
 
-def test_connectivity_after_imperfect_generation(tmp_path):
+def test_connectivity_after_imperfect_generation(tmp_path: Path) -> None:
     cfg_path = _write_config(tmp_path, PERFECT="False", SEED="55")
     cfg = load_config(str(cfg_path))
     maze, _ = setup_new_maze(cfg)

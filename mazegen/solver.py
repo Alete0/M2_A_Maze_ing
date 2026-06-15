@@ -91,8 +91,8 @@ class MazeSolver:
         """Find the shortest path from entry to exit using BFS.
 
         The resulting cell sequence is stored internally and can be
-        retrieved with :meth:`get_directions`. If no path exists, the
-        internal path remains empty.
+        retrieved with :meth:`get_directions`, which raises
+        :class:`NoSolutionError` if BFS finds no path.
 
         Args:
             maze: Internal grid of cell wall bitmasks.

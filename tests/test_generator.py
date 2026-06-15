@@ -5,12 +5,14 @@ from __future__ import annotations
 import copy
 
 import pytest
+from pytest import CaptureFixture
 
 from conftest import (
     EAST,
     NORTH,
     SOUTH,
     WEST,
+    GeneratedMazeFactory,
     check_bidirectional,
     check_no_3x3_open,
     count_open_edges,
@@ -23,7 +25,12 @@ from mazegen.generator import InvalidPlacementError, MazeGenerator
     "w,h,seed",
     [(10, 10, 42), (20, 15, 99), (15, 15, 77)],
 )
-def test_invariantes_estructurales_parametrized(w, h, seed, generated_maze):
+def test_invariantes_estructurales_parametrized(
+    w: int,
+    h: int,
+    seed: int,
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     """IV.4: bidirectional walls and spanning tree on multiple sizes."""
     entry = (0, 0)
     exit_c = (h - 1, w - 1)
@@ -36,7 +43,9 @@ def test_invariantes_estructurales_parametrized(w, h, seed, generated_maze):
     assert count_open_edges(maze) == vertices - 1
 
 
-def test_coherencia_bidireccional_muros(generated_maze):
+def test_coherencia_bidireccional_muros(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     """IV.4: each neighbouring cell must have the same wall if any."""
     _, maze, _, _ = generated_maze(
         10, 10, (0, 0), (9, 9), seed=42, perfect=True,
@@ -44,7 +53,9 @@ def test_coherencia_bidireccional_muros(generated_maze):
     check_bidirectional(maze)
 
 
-def test_perfect_maze_spanning_tree(generated_maze):
+def test_perfect_maze_spanning_tree(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     """IV.4: perfect maze = spanning tree (V-1 open edges)."""
     w, h = 20, 15
     gen, maze, _, _ = generated_maze(
@@ -55,7 +66,9 @@ def test_perfect_maze_spanning_tree(generated_maze):
     assert count_open_edges(maze) == vertices - 1
 
 
-def test_conectividad_total_y_aislamiento_42(generated_maze):
+def test_conectividad_total_y_aislamiento_42(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     """IV.4: only pattern 42 cells may be isolated."""
     w, h = 15, 15
     gen, maze, entry, _ = generated_maze(
@@ -68,14 +81,14 @@ def test_conectividad_total_y_aislamiento_42(generated_maze):
     assert isolated == pattern_cells
 
 
-def test_restriccion_densidad_sin_areas_3x3():
+def test_restriccion_densidad_sin_areas_3x3() -> None:
     """IV.4: never a 3x3 open area (imperfect mode)."""
     gen = MazeGenerator(20, 20, seed=123, perfect=False)
     gen.generate((0, 0), (19, 19))
     check_no_3x3_open(gen.get_maze())
 
 
-def test_determinismo_misma_semilla():
+def test_determinismo_misma_semilla() -> None:
     """IV.4: reproducibility via seed."""
     gen1 = MazeGenerator(12, 12, seed=42, perfect=True)
     gen1.generate((0, 0), (11, 11))
@@ -86,7 +99,7 @@ def test_determinismo_misma_semilla():
     assert gen1.get_maze() == maze1 == gen2.get_maze()
 
 
-def test_semilla_cero_reproducible():
+def test_semilla_cero_reproducible() -> None:
     """Edge: SEED=0 must still fix randomness (not treated as falsy)."""
     gen_a = MazeGenerator(10, 10, seed=0, perfect=True)
     gen_a.generate((0, 0), (9, 9))
@@ -95,7 +108,9 @@ def test_semilla_cero_reproducible():
     assert gen_a.get_maze() == gen_b.get_maze()
 
 
-def test_muros_bordes_externos_cerrados(generated_maze):
+def test_muros_bordes_externos_cerrados(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     """IV.4: external borders must have closed walls."""
     _, maze, _, _ = generated_maze(
         10, 10, (0, 0), (9, 9), seed=5, perfect=True,
@@ -109,7 +124,9 @@ def test_muros_bordes_externos_cerrados(generated_maze):
         assert maze[r][w - 1] & EAST
 
 
-def test_patron_42_celdas_totalmente_cerradas(generated_maze):
+def test_patron_42_celdas_totalmente_cerradas(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     """IV.4: pattern cells are fully closed (hex F = 15)."""
     gen, maze, _, _ = generated_maze(
         15, 15, (0, 0), (14, 14), seed=3, perfect=True,
@@ -120,7 +137,9 @@ def test_patron_42_celdas_totalmente_cerradas(generated_maze):
         assert maze[r][c] == 15
 
 
-def test_mapa_pequeno_sin_patron_sigue_valido(capsys):
+def test_mapa_pequeno_sin_patron_sigue_valido(
+    capsys: CaptureFixture[str],
+) -> None:
     """IV.4: small maze without pattern still structurally valid."""
     gen = MazeGenerator(5, 5, seed=1, perfect=True)
     gen.generate((0, 0), (4, 4))
@@ -132,7 +151,7 @@ def test_mapa_pequeno_sin_patron_sigue_valido(capsys):
     assert len(visited) == 5 * 5
 
 
-def test_entry_en_patron_42_aborta():
+def test_entry_en_patron_42_aborta() -> None:
     """IV.4: ENTRY on pattern → InvalidPlacementError."""
     gen = MazeGenerator(15, 15, seed=1, perfect=True)
     gen.pattern_42()
@@ -141,7 +160,7 @@ def test_entry_en_patron_42_aborta():
         gen.generate(entry_on_pattern, (14, 14))
 
 
-def test_perfect_false_mantiene_coherencia_y_sin_3x3():
+def test_perfect_false_mantiene_coherencia_y_sin_3x3() -> None:
     """IV.4: imperfect maze keeps bidirectional walls and no 3x3."""
     gen = MazeGenerator(15, 15, seed=88, perfect=False)
     gen.generate((0, 0), (14, 14))
@@ -153,7 +172,9 @@ def test_perfect_false_mantiene_coherencia_y_sin_3x3():
     assert count_open_edges(maze) >= vertices - 1
 
 
-def test_valores_celda_en_rango_4_bits(generated_maze):
+def test_valores_celda_en_rango_4_bits(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     _, maze, _, _ = generated_maze(
         10, 10, (0, 0), (9, 9), seed=1, perfect=True,
     )
@@ -162,14 +183,14 @@ def test_valores_celda_en_rango_4_bits(generated_maze):
             assert 0 <= cell <= 15
 
 
-def test_neighbor_coords_cuatro_direcciones():
+def test_neighbor_coords_cuatro_direcciones() -> None:
     assert MazeGenerator.neighbor_coords((2, 2), 0) == (1, 2)
     assert MazeGenerator.neighbor_coords((2, 2), 1) == (2, 3)
     assert MazeGenerator.neighbor_coords((2, 2), 2) == (3, 2)
     assert MazeGenerator.neighbor_coords((2, 2), 3) == (2, 1)
 
 
-def test_neighbor_coords_invalido_lanza():
+def test_neighbor_coords_invalido_lanza() -> None:
     with pytest.raises(Exception, match="Unknown"):
         MazeGenerator.neighbor_coords((0, 0), 9)
 
@@ -178,12 +199,12 @@ def test_neighbor_coords_invalido_lanza():
     "coord,expected",
     [((0, 0), False), ((-1, 0), True), ((9, 9), False), ((10, 0), True)],
 )
-def test_out_of_bounds(coord, expected):
+def test_out_of_bounds(coord: tuple[int, int], expected: bool) -> None:
     gen = MazeGenerator(10, 10)
     assert gen.out_of_bounds(coord) is expected
 
 
-def test_open_wall_coherencia_cuatro_direcciones():
+def test_open_wall_coherencia_cuatro_direcciones() -> None:
     gen = MazeGenerator(3, 3, perfect=True)
     gen.generate((0, 0), (2, 2))
     maze = [[15, 15, 15], [15, 15, 15], [15, 15, 15]]
@@ -196,7 +217,9 @@ def test_open_wall_coherencia_cuatro_direcciones():
     assert not (gen._maze[0][1] & SOUTH)
 
 
-def test_g6_mensaje_error_laberinto_pequeno(capsys):
+def test_g6_mensaje_error_laberinto_pequeno(
+    capsys: CaptureFixture[str],
+) -> None:
     """IV.4: print error when maze too small for 42 pattern."""
     gen = MazeGenerator(5, 5, seed=1, perfect=True)
     gen.generate((0, 0), (4, 4))
@@ -205,7 +228,7 @@ def test_g6_mensaje_error_laberinto_pequeno(capsys):
     assert captured.err.strip() != ""
 
 
-def test_g9_doble_generacion_mantiene_patron_y_grid():
+def test_g9_doble_generacion_mantiene_patron_y_grid() -> None:
     """VI: reusability — second generate must not corrupt state."""
     gen = MazeGenerator(12, 12, seed=1, perfect=True)
     gen.generate((0, 0), (11, 11))
@@ -217,7 +240,7 @@ def test_g9_doble_generacion_mantiene_patron_y_grid():
     assert gen.get_maze() == grid_original
 
 
-def test_semillas_distintas_producen_grids_distintos():
+def test_semillas_distintas_producen_grids_distintos() -> None:
     gen_a = MazeGenerator(10, 10, seed=1, perfect=True)
     gen_a.generate((0, 0), (9, 9))
     gen_b = MazeGenerator(10, 10, seed=2, perfect=True)
@@ -226,7 +249,7 @@ def test_semillas_distintas_producen_grids_distintos():
 
 
 @pytest.mark.slow
-def test_g8_limite_recursividad_50x50():
+def test_g8_limite_recursividad_50x50() -> None:
     """IV.2: must not crash on 50x50."""
     gen = MazeGenerator(50, 50, seed=1, perfect=True)
     try:

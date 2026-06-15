@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,11 @@ WEST = 0b1000
 
 Coord = tuple[int, int]
 Grid = list[list[int]]
+
+WriteConfig = Callable[[str], Path]
+GeneratedMazeFactory = Callable[
+    ..., tuple[MazeGenerator, Grid, Coord, Coord]
+]
 
 
 def check_bidirectional(maze: Grid) -> None:
@@ -146,7 +152,7 @@ def project_root() -> Path:
 
 
 @pytest.fixture
-def write_config(tmp_path: Path):
+def write_config(tmp_path: Path) -> WriteConfig:
     """Factory: write a KEY=VALUE config file and return its path."""
 
     def _write(content: str) -> Path:
@@ -158,7 +164,7 @@ def write_config(tmp_path: Path):
 
 
 @pytest.fixture
-def generated_maze():
+def generated_maze() -> GeneratedMazeFactory:
     """Factory returning (generator, maze, entry, exit) after generate()."""
 
     def _generate(

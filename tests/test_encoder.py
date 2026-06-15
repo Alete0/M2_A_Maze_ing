@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+from pytest import CaptureFixture
 
 from conftest import run_validator
 from encoder import gen_maze_file, line_to_hex
@@ -29,22 +32,22 @@ from encoder import gen_maze_file, line_to_hex
         (15, "F"),
     ],
 )
-def test_line_to_hex_truth_table(value, expected):
+def test_line_to_hex_truth_table(value: int, expected: str) -> None:
     """IV.5: each hex digit encodes wall bits 0..F."""
     assert line_to_hex([value]) == expected
 
 
-def test_line_to_hex_subject_examples():
+def test_line_to_hex_subject_examples() -> None:
     """IV.5: 3 = N+E closed; A = E+W closed."""
     assert line_to_hex([3]) == "3"
     assert line_to_hex([10]) == "A"
 
 
-def test_line_to_hex_full_row():
+def test_line_to_hex_full_row() -> None:
     assert line_to_hex([0, 3, 10, 15]) == "03AF"
 
 
-def test_gen_maze_file_structure(tmp_path):
+def test_gen_maze_file_structure(tmp_path: Path) -> None:
     """IV.5 + HOJA_DE_RUTA §1.6: hex rows, blank line, entry, exit, path."""
     maze = [[15, 0], [0, 15]]
     out = tmp_path / "maze.txt"
@@ -61,7 +64,7 @@ def test_gen_maze_file_structure(tmp_path):
     assert lines[5] == "ES"
 
 
-def test_gen_maze_file_all_lines_end_with_newline(tmp_path):
+def test_gen_maze_file_all_lines_end_with_newline(tmp_path: Path) -> None:
     maze = [[0]]
     out = tmp_path / "single.txt"
     gen_maze_file(str(out), maze, (0, 0), (0, 0), "")
@@ -75,7 +78,7 @@ def test_gen_maze_file_all_lines_end_with_newline(tmp_path):
     assert parts[4] == ""
 
 
-def test_gen_maze_file_empty_path_solution(tmp_path):
+def test_gen_maze_file_empty_path_solution(tmp_path: Path) -> None:
     maze = [[15]]
     out = tmp_path / "nopath.txt"
     gen_maze_file(str(out), maze, (0, 0), (0, 0), path_solution="")
@@ -83,7 +86,7 @@ def test_gen_maze_file_empty_path_solution(tmp_path):
     assert content.split("\n")[4] == ""
 
 
-def test_gen_maze_file_passes_output_validator(tmp_path):
+def test_gen_maze_file_passes_output_validator(tmp_path: Path) -> None:
     """Round-trip: generated file must pass subject output_validator.py."""
     maze = [
         [0b1111, 0b0111, 0b1111],
@@ -96,7 +99,9 @@ def test_gen_maze_file_passes_output_validator(tmp_path):
     assert code == 0, output
 
 
-def test_gen_maze_file_write_error(capsys, tmp_path):
+def test_gen_maze_file_write_error(
+    capsys: CaptureFixture[str], tmp_path: Path,
+) -> None:
     bad_path = str(tmp_path / "missing" / "dir" / "out.txt")
     with pytest.raises(SystemExit) as exc:
         gen_maze_file(bad_path, [[0]], (0, 0), (0, 0))

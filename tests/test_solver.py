@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from conftest import (
+    GeneratedMazeFactory,
     MOCK_GRID_CORRIDOR,
     MOCK_GRID_DISCONNECTED,
     MOCK_GRID_TWO_PATHS,
@@ -24,7 +25,9 @@ from mazegen.solver import MazeSolver, NoSolutionError
         (0b1010, [0, 2]),
     ],
 )
-def test_get_available_neighbors(cell, expected_neighbors):
+def test_get_available_neighbors(
+    cell: int, expected_neighbors: list[int],
+) -> None:
     assert MazeSolver.get_available_neighbors(cell) == expected_neighbors
 
 
@@ -37,18 +40,22 @@ def test_get_available_neighbors(cell, expected_neighbors):
         ((1, 0), (0, 0), "N"),
     ],
 )
-def test_direction(current, next_cell, expected):
+def test_direction(
+    current: tuple[int, int],
+    next_cell: tuple[int, int],
+    expected: str,
+) -> None:
     assert MazeSolver.direction(current, next_cell) == expected
 
 
-def test_neighbor_coords_and_out_of_bounds():
+def test_neighbor_coords_and_out_of_bounds() -> None:
     solver = MazeSolver(5, 5)
     assert solver.neighbor_coords((2, 2), 1) == (2, 3)
     assert solver.out_of_bounds((-1, 0)) is True
     assert solver.out_of_bounds((4, 4)) is False
 
 
-def test_solve_corridor_shortest_path():
+def test_solve_corridor_shortest_path() -> None:
     solver = MazeSolver(5, 5)
     solver.solve(MOCK_GRID_CORRIDOR, (0, 0), (0, 4))
     assert len(solver._path_cell) == 5
@@ -58,7 +65,7 @@ def test_solve_corridor_shortest_path():
     assert end == (0, 4)
 
 
-def test_solve_two_paths_picks_shortest():
+def test_solve_two_paths_picks_shortest() -> None:
     solver = MazeSolver(3, 3)
     solver.solve(MOCK_GRID_TWO_PATHS, (0, 0), (2, 2))
     dirs = solver.get_directions()
@@ -67,7 +74,7 @@ def test_solve_two_paths_picks_shortest():
     assert end == (2, 2)
 
 
-def test_solve_disconnected_no_path():
+def test_solve_disconnected_no_path() -> None:
     solver = MazeSolver(3, 3)
     solver.solve(MOCK_GRID_DISCONNECTED, (0, 0), (2, 2))
     assert solver._path_cell == []
@@ -75,13 +82,15 @@ def test_solve_disconnected_no_path():
         solver.get_directions()
 
 
-def test_walk_path_respects_walls():
+def test_walk_path_respects_walls() -> None:
     solver = MazeSolver(5, 5)
     solver.solve(MOCK_GRID_CORRIDOR, (0, 0), (0, 4))
     walk_path(MOCK_GRID_CORRIDOR, (0, 0), solver.get_directions())
 
 
-def test_solver_integration_with_generator(generated_maze):
+def test_solver_integration_with_generator(
+    generated_maze: GeneratedMazeFactory,
+) -> None:
     gen, maze, entry, exit_c = generated_maze(10, 10, (0, 0), (9, 9), seed=42)
     solver = MazeSolver(10, 10)
     solver.solve(maze, entry, exit_c)
@@ -89,7 +98,7 @@ def test_solver_integration_with_generator(generated_maze):
     assert walk_path(maze, entry, dirs) == exit_c
 
 
-def test_imperfect_maze_still_solvable():
+def test_imperfect_maze_still_solvable() -> None:
     gen = MazeGenerator(12, 12, seed=55, perfect=False)
     gen.generate((0, 0), (11, 11))
     maze = gen.get_maze()

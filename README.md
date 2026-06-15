@@ -35,8 +35,8 @@ The program reads a plain text file (default: `config.txt`). Lines starting with
 The core generation and solving logic is strictly isolated in the `mazegen` package, completely independent of the CLI parser or hex encoder. 
 
 **How to reuse:**
-After running `make build`, install the generated package in your environment: 
-`pip install dist/mazegen-0.1.0-py3-none-any.whl`.
+After running `make build`, install the wheel from the repository root:
+`pip install mazegen-0.1.0-py3-none-any.whl`.
 
 ```python
 from mazegen import MazeGenerator, MazeSolver

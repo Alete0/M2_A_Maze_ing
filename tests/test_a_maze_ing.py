@@ -4,28 +4,31 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 from unittest.mock import patch
+
+from pytest import CaptureFixture
 
 from a_maze_ing import path_to_exit, print_maze, setup_new_maze
 from conftest import ROOT, walk_path
 from parser import MazeConfig
 
 
-def test_path_to_exit_basic():
+def test_path_to_exit_basic() -> None:
     coords = path_to_exit((0, 0), "EES")
     assert coords == {(0, 0), (0, 1), (0, 2), (1, 2)}
 
 
-def test_path_to_exit_includes_entry_only_when_empty():
+def test_path_to_exit_includes_entry_only_when_empty() -> None:
     assert path_to_exit((3, 4), "") == {(3, 4)}
 
 
-def test_path_to_exit_ignores_invalid_chars():
+def test_path_to_exit_ignores_invalid_chars() -> None:
     coords = path_to_exit((0, 0), "ExE")
     assert coords == {(0, 0), (0, 1), (0, 2)}
 
 
-def test_setup_new_maze_swaps_config_xy_to_row_col():
+def test_setup_new_maze_swaps_config_xy_to_row_col() -> None:
     """Config (x,y) must map to internal (row,col)=(y,x)."""
     cfg = MazeConfig(
         width=10,
@@ -43,7 +46,7 @@ def test_setup_new_maze_swaps_config_xy_to_row_col():
     assert end == internal_exit
 
 
-def test_print_maze_shows_entry_and_exit(capsys):
+def test_print_maze_shows_entry_and_exit(capsys: CaptureFixture[str]) -> None:
     maze = [[0b0101, 0b0101], [0b1111, 0b1111]]
     print_maze(maze, (0, 0), (0, 1), "", False, "\033[34m", set())
     out = capsys.readouterr().out
@@ -51,7 +54,7 @@ def test_print_maze_shows_entry_and_exit(capsys):
     assert " X " in out
 
 
-def test_print_maze_shows_path_marker(capsys):
+def test_print_maze_shows_path_marker(capsys: CaptureFixture[str]) -> None:
     maze = [
         [0b0101, 0b0101, 0b0101],
         [0b1111, 0b1111, 0b1111],
@@ -61,7 +64,7 @@ def test_print_maze_shows_path_marker(capsys):
     assert "●" in out
 
 
-def test_print_maze_different_colors(capsys):
+def test_print_maze_different_colors(capsys: CaptureFixture[str]) -> None:
     maze = [[0b1111]]
     print_maze(maze, (0, 0), (0, 0), "", False, "\033[31m", set())
     red_out = capsys.readouterr().out
@@ -71,12 +74,12 @@ def test_print_maze_different_colors(capsys):
     assert "\033[32m" in green_out
 
 
-def test_print_maze_single_cell_no_crash(capsys):
+def test_print_maze_single_cell_no_crash(capsys: CaptureFixture[str]) -> None:
     print_maze([[15]], (0, 0), (0, 0), "", False, "\033[34m", set())
     assert capsys.readouterr().out
 
 
-def test_cli_no_arguments():
+def test_cli_no_arguments() -> None:
     result = subprocess.run(
         [sys.executable, str(ROOT / "a_maze_ing.py")],
         capture_output=True,
@@ -89,7 +92,7 @@ def test_cli_no_arguments():
     assert "usage" in out_lower or "usage" in err_lower
 
 
-def test_cli_invalid_config(tmp_path):
+def test_cli_invalid_config(tmp_path: Path) -> None:
     bad = tmp_path / "bad.txt"
     bad.write_text("WIDTH=10\n", encoding="utf-8")
     result = subprocess.run(
@@ -109,7 +112,7 @@ def _utf8_env() -> dict[str, str]:
     return env
 
 
-def test_cli_valid_config_writes_output(tmp_path):
+def test_cli_valid_config_writes_output(tmp_path: Path) -> None:
     out_file = tmp_path / "out_maze.txt"
     cfg = tmp_path / "cfg.txt"
     cfg.write_text(
@@ -132,7 +135,7 @@ def test_cli_valid_config_writes_output(tmp_path):
     assert out_file.is_file()
 
 
-def test_menu_quit_via_mock_input(capsys):
+def test_menu_quit_via_mock_input(capsys: CaptureFixture[str]) -> None:
     """Cap. V: option 4 quits without crash."""
     cfg = MazeConfig(
         width=8,
