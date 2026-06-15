@@ -7,7 +7,7 @@
 #   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/15 12:36:51 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/15 13:26:18 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -210,6 +210,8 @@ class MazeGenerator:
         # If maze is too small 42 pattern does not fit
         if self._height < 7 or self._width < 9:
             self._pattern_fits = False
+            print("Error: Maze size too small to fit the '42' pattern.",
+                  file=sys.stderr)
             return []
 
         # Else calculate offset to apply to default pattern
@@ -217,7 +219,7 @@ class MazeGenerator:
         y_offset: int = int(self._height / 2) - 2
 
         self.pattern = [(cell[0] + y_offset, cell[1] + x_offset)
-                        for cell in self.pattern]
+                        for cell in MazeGenerator.pattern]
         return self.pattern
 
     def generate(self, entry: tuple[int, int], exit_coord: tuple[int, int]
