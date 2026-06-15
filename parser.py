@@ -27,7 +27,6 @@ class MazeConfig:
     output_file: str
     perfect: bool
     seed: Optional[int] = None
-    algorithm: str = "backtracker"
 
 
 def load_config(file_path: str) -> MazeConfig:
@@ -119,8 +118,6 @@ def load_config(file_path: str) -> MazeConfig:
         if 'SEED' in config_data:
             seed = int(config_data['SEED'])
 
-        algorithm = config_data.get('ALGORITHM', "backtracker")
-
         return MazeConfig(
             width=width,
             height=height,
@@ -129,7 +126,6 @@ def load_config(file_path: str) -> MazeConfig:
             output_file=output_file,
             perfect=perfect,
             seed=seed,
-            algorithm=algorithm
         )
 
     except ValueError as ve:

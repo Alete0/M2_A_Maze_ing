@@ -26,7 +26,6 @@ def test_valid_minimal_config(write_config):
         output_file="out.txt",
         perfect=True,
         seed=None,
-        algorithm="backtracker",
     )
 
 
@@ -80,15 +79,14 @@ def test_perfect_boolean_variants(write_config, perfect_val, expected):
     assert cfg.perfect is expected
 
 
-def test_optional_seed_and_algorithm(write_config):
+def test_optional_seed(write_config):
     path = write_config(
         "WIDTH=10\nHEIGHT=10\nENTRY=0,0\nEXIT=9,9\n"
         "OUTPUT_FILE=o.txt\nPERFECT=True\n"
-        "SEED=42\nALGORITHM=prim\n"
+        "SEED=42\n"
     )
     cfg = load_config(str(path))
     assert cfg.seed == 42
-    assert cfg.algorithm == "prim"
 
 
 @pytest.mark.parametrize(

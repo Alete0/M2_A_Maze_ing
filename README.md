@@ -26,7 +26,6 @@ The program reads a plain text file (default: `config.txt`). Lines starting with
 
 **Optional Keys:**
 - `SEED`: Integer for reproducible generation (e.g., `SEED=42`).
-- `ALGORITHM`: Generation algorithm (e.g., `ALGORITHM=backtracker`).
 
 ## Maze Generation Algorithm
 **Chosen Algorithm:** Recursive Backtracker (Depth-First Search).
