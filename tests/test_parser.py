@@ -115,7 +115,10 @@ def test_file_not_found(capsys):
     assert "not found" in capsys.readouterr().err.lower()
 
 
-@pytest.mark.parametrize("missing_key", ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"])
+@pytest.mark.parametrize(
+    "missing_key",
+    ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"],
+)
 def test_missing_mandatory_key(write_config, capsys, missing_key):
     keys = {
         "WIDTH": "10",

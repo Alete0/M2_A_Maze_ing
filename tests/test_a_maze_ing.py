@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 from a_maze_ing import path_to_exit, print_maze, setup_new_maze
 from conftest import ROOT, walk_path
@@ -87,7 +84,9 @@ def test_cli_no_arguments():
         cwd=str(ROOT),
     )
     assert result.returncode != 0
-    assert "usage" in result.stdout.lower() or "usage" in result.stderr.lower()
+    out_lower = result.stdout.lower()
+    err_lower = result.stderr.lower()
+    assert "usage" in out_lower or "usage" in err_lower
 
 
 def test_cli_invalid_config(tmp_path):

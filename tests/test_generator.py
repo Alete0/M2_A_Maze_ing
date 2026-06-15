@@ -19,12 +19,17 @@ from conftest import (
 from mazegen.generator import MazeGenerator
 
 
-@pytest.mark.parametrize("w,h,seed", [(10, 10, 42), (20, 15, 99), (15, 15, 77)])
+@pytest.mark.parametrize(
+    "w,h,seed",
+    [(10, 10, 42), (20, 15, 99), (15, 15, 77)],
+)
 def test_invariantes_estructurales_parametrized(w, h, seed, generated_maze):
     """IV.4: bidirectional walls and spanning tree on multiple sizes."""
     entry = (0, 0)
     exit_c = (h - 1, w - 1)
-    gen, maze, _, _ = generated_maze(w, h, entry, exit_c, seed=seed, perfect=True)
+    gen, maze, _, _ = generated_maze(
+        w, h, entry, exit_c, seed=seed, perfect=True,
+    )
     check_bidirectional(maze)
     pattern_cells = len(gen.pattern) if gen._pattern_fits else 0
     vertices = w * h - pattern_cells
@@ -33,14 +38,18 @@ def test_invariantes_estructurales_parametrized(w, h, seed, generated_maze):
 
 def test_coherencia_bidireccional_muros(generated_maze):
     """IV.4: each neighbouring cell must have the same wall if any."""
-    _, maze, _, _ = generated_maze(10, 10, (0, 0), (9, 9), seed=42, perfect=True)
+    _, maze, _, _ = generated_maze(
+        10, 10, (0, 0), (9, 9), seed=42, perfect=True,
+    )
     check_bidirectional(maze)
 
 
 def test_perfect_maze_spanning_tree(generated_maze):
     """IV.4: perfect maze = spanning tree (V-1 open edges)."""
     w, h = 20, 15
-    gen, maze, _, _ = generated_maze(w, h, (0, 0), (14, 19), seed=99, perfect=True)
+    gen, maze, _, _ = generated_maze(
+        w, h, (0, 0), (14, 19), seed=99, perfect=True,
+    )
     pattern_cells = len(gen.pattern) if gen._pattern_fits else 0
     vertices = w * h - pattern_cells
     assert count_open_edges(maze) == vertices - 1
@@ -49,7 +58,9 @@ def test_perfect_maze_spanning_tree(generated_maze):
 def test_conectividad_total_y_aislamiento_42(generated_maze):
     """IV.4: only pattern 42 cells may be isolated."""
     w, h = 15, 15
-    gen, maze, entry, _ = generated_maze(w, h, (0, 0), (14, 14), seed=77, perfect=True)
+    gen, maze, entry, _ = generated_maze(
+        w, h, (0, 0), (14, 14), seed=77, perfect=True,
+    )
     visited = flood_fill(maze, entry)
     all_cells = {(r, c) for r in range(h) for c in range(w)}
     isolated = all_cells - visited
@@ -86,7 +97,9 @@ def test_semilla_cero_reproducible():
 
 def test_muros_bordes_externos_cerrados(generated_maze):
     """IV.4: external borders must have closed walls."""
-    _, maze, _, _ = generated_maze(10, 10, (0, 0), (9, 9), seed=5, perfect=True)
+    _, maze, _, _ = generated_maze(
+        10, 10, (0, 0), (9, 9), seed=5, perfect=True,
+    )
     h, w = len(maze), len(maze[0])
     for c in range(w):
         assert maze[0][c] & NORTH
@@ -98,7 +111,9 @@ def test_muros_bordes_externos_cerrados(generated_maze):
 
 def test_patron_42_celdas_totalmente_cerradas(generated_maze):
     """IV.4: pattern cells are fully closed (hex F = 15)."""
-    gen, maze, _, _ = generated_maze(15, 15, (0, 0), (14, 14), seed=3, perfect=True)
+    gen, maze, _, _ = generated_maze(
+        15, 15, (0, 0), (14, 14), seed=3, perfect=True,
+    )
     if not gen._pattern_fits:
         pytest.skip("Pattern does not fit")
     for r, c in gen.pattern:
@@ -140,7 +155,9 @@ def test_perfect_false_mantiene_coherencia_y_sin_3x3():
 
 
 def test_valores_celda_en_rango_4_bits(generated_maze):
-    _, maze, _, _ = generated_maze(10, 10, (0, 0), (9, 9), seed=1, perfect=True)
+    _, maze, _, _ = generated_maze(
+        10, 10, (0, 0), (9, 9), seed=1, perfect=True,
+    )
     for row in maze:
         for cell in row:
             assert 0 <= cell <= 15

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 
@@ -31,13 +29,15 @@ def check_bidirectional(maze: Grid) -> None:
     for r in range(height):
         for c in range(width):
             if c < width - 1:
-                assert bool(maze[r][c] & EAST) == bool(maze[r][c + 1] & WEST), (
-                    f"E/W incoherence at ({r},{c})"
+                east_ok = (
+                    bool(maze[r][c] & EAST) == bool(maze[r][c + 1] & WEST)
                 )
+                assert east_ok, f"E/W incoherence at ({r},{c})"
             if r < height - 1:
-                assert bool(maze[r][c] & SOUTH) == bool(maze[r + 1][c] & NORTH), (
-                    f"N/S incoherence at ({r},{c})"
+                south_ok = bool(maze[r][c] & SOUTH) == bool(
+                    maze[r + 1][c] & NORTH
                 )
+                assert south_ok, f"N/S incoherence at ({r},{c})"
 
 
 def flood_fill(maze: Grid, start: Coord) -> set[Coord]:
@@ -82,7 +82,7 @@ def check_no_3x3_open(maze: Grid) -> None:
 
 
 def count_open_edges(maze: Grid) -> int:
-    """Count undirected open passages (east and south only to avoid duplicates)."""
+    """Count undirected open passages (east/south edges only)."""
     height = len(maze)
     width = len(maze[0]) if height else 0
     edges = 0
@@ -177,7 +177,10 @@ def generated_maze():
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line("markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')")
+    config.addinivalue_line(
+        "markers",
+        'slow: marks tests as slow (deselect with \'-m "not slow"\')',
+    )
 
 
 def run_validator(output_path: Path) -> tuple[int, str]:

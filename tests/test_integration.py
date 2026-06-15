@@ -107,7 +107,9 @@ def test_perfect_true_and_false_both_valid(tmp_path):
         cfg = load_config(str(cfg_path))
         maze, directions = setup_new_maze(cfg)
         out = Path(cfg.output_file)
-        gen_maze_file(str(out), maze.get_maze(), cfg.entry, cfg.exit, directions)
+        gen_maze_file(
+            str(out), maze.get_maze(), cfg.entry, cfg.exit, directions,
+        )
         code, _ = run_validator(out)
         assert code == 0
 
