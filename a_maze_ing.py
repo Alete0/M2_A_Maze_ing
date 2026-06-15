@@ -256,7 +256,11 @@ if __name__ == "__main__":
         print("3. Rotate maze colors")
         print("4. Quit")
 
-        choice = input("Choice? (1-4): ").strip()
+        try:
+            choice = input("Choice? (1-4): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nSee you soon!")
+            break
 
         if choice == "1":
             # Passing use_seed=False guarantees a completely fresh layout
