@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   solver.py                                            :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/12 10:50:56 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/12 15:19:47 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/13 15:34:23 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -87,12 +87,14 @@ class MazeSolver:
 
         # Init vars needed
         queue: list[tuple[int, int]] = []
-        visited: list[tuple[int, int]] = []
+        visited: set[tuple[int, int]] = set()
         parent: dict[tuple[int, int], tuple[int, int] | None] = {}
 
         parent[entry] = None
 
         queue.append(entry)
+
+        visited.add(entry)
 
         while queue:
             cell: tuple[int, int] = queue.pop(0)
@@ -104,14 +106,13 @@ class MazeSolver:
                     current = parent[current]
                 return
 
-            visited.append(cell)
-
             cell_value: int = maze[cell[0]][cell[1]]
             neighbors: list[int] = self.get_available_neighbors(cell_value)
 
             for neighbor in neighbors:
                 n: tuple[int, int] = self.neighbor_coords(cell, neighbor)
                 if n not in visited and not self.out_of_bounds(n):
+                    visited.add(n)
                     parent[n] = cell
                     queue.append(n)
 

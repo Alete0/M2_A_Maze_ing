@@ -7,7 +7,7 @@
 #   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/13 12:02:02 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/13 16:45:31 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -65,8 +65,8 @@ def path_to_exit(entry: Coord, path_str: str) -> Set[Coord]:
     return visited_coordinates
 
 
-def print_maze(maze: list[list[int]], entry: Coord, solution: str,
-               print_path: bool, color: str) -> None:
+def print_maze(maze: list[list[int]], entry: Coord, exit: Coord,
+               solution: str, print_path: bool, color: str) -> None:
     """
     Print a maze using ASCII characters.
     Each cell is represented by a 4-bit value where each bit represents a wall:
@@ -79,7 +79,7 @@ def print_maze(maze: list[list[int]], entry: Coord, solution: str,
 
     # Local reset constant to prevent color bleeding into the menu
     RESET = "\033[0m"
-    PATH_COLOR = "\033[38;2;255;255;0m"
+    PATH_COLOR = "\033[33m"
 
     height = len(maze)
     width = len(maze[0]) if height > 0 else 0
@@ -109,9 +109,9 @@ def print_maze(maze: list[list[int]], entry: Coord, solution: str,
             else:
                 line += " "
             current_cell = (row_idx, col_idx)
-            if current_cell == config.entry:
+            if current_cell == entry:
                 line += " E "
-            elif current_cell == config.exit:
+            elif current_cell == exit:
                 line += " X "
             elif current_cell in solution_cells and print_path:
                 line += PATH_COLOR + " ● " + RESET
@@ -162,7 +162,7 @@ def setup_new_maze(
     entry_coord = (config.entry[1], config.entry[0])
     exit_coord = (config.exit[1], config.exit[0])
 
-    maze.generate(entry_coord)
+    maze.generate(entry_coord, exit_coord)
 
     # 3. Instantiate solver and find the shortest path
     maze_solution = MazeSolver(config.width, config.height)
@@ -198,10 +198,14 @@ if __name__ == "__main__":
 
     show_path = True
 
+    entry_coord = (config.entry[1], config.entry[0])
+    exit_coord = (config.exit[1], config.exit[0])
+
     while True:
         print_maze(
             maze.get_maze(),
-            config.entry,
+            entry_coord,
+            exit_coord,
             directions,
             show_path,
             WALL_COLORS[current_color_idx]

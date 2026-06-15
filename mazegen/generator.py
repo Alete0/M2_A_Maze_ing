@@ -4,14 +4,15 @@
 #                                                          :::      ::::::::  #
 #   generator.py                                         :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 15:25:20 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/13 16:01:02 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
 import random
+import sys
 
 
 class MazeGenerator:
@@ -155,8 +156,9 @@ class MazeGenerator:
 
         # Choose a random number of walls to open
         random_cells: list[tuple[int, int]] = list()
-        random_cells = random.sample(available_cells,
-                                     k=random.randint(1, len(available_cells)))
+        available_list = list(available_cells)
+        random_cells = random.sample(available_list,
+                                     k=random.randint(1, len(available_list)))
         #   Open a random wall until no more changes needed to be
         for cell in random_cells:
             for n in random.sample([0, 1, 2, 3], k=4):
@@ -217,7 +219,8 @@ class MazeGenerator:
                         for cell in self.pattern]
         return self.pattern
 
-    def generate(self, entry: tuple[int, int]) -> None:
+    def generate(self, entry: tuple[int, int], exit_coord: tuple[int, int]
+                 ) -> None:
         """Generate the maze.
         If there is a seed it sets the random module seed to that value
 
@@ -228,10 +231,16 @@ class MazeGenerator:
             random.seed(self._seed)
 
         try:
-            # TODO: Check if entry or exit is a cell from the 42 pattern
+            pattern_cells = self.pattern_42()
+            if entry in pattern_cells or exit_coord in pattern_cells:
+                print("Error: ENTRY or EXIT is on the '42' pattern.",
+                      file=sys.stderr)
+                sys.exit(1)
             visited: list[tuple[int, int]] = []
-            visited += self.pattern_42()
+            visited += pattern_cells
             self.backtracker(entry, visited)
+        except SystemExit:
+            raise
         except Exception as e:
             print(e)
             exit(1)
