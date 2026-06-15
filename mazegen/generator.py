@@ -225,10 +225,11 @@ class MazeGenerator:
     def generate(self, entry: tuple[int, int], exit_coord: tuple[int, int]
                  ) -> None:
         """Generate the maze.
-        If there is a seed it sets the random module seed to that value
+        If there is a seed it sets the random module seed to that value.
 
         Args:
-            start (tuple[int, int]): Starting point of the maze
+            entry (tuple[int, int]): Entry cell coordinates (row, col).
+            exit_coord (tuple[int, int]): Exit cell coordinates (row, col).
         """
         if self._seed is not None:
             random.seed(self._seed)

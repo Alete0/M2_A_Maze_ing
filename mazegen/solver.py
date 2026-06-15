@@ -88,7 +88,17 @@ class MazeSolver:
               maze: list[list[int]],
               entry: tuple[int, int],
               exit: tuple[int, int]) -> None:
+        """Find the shortest path from entry to exit using BFS.
 
+        The resulting cell sequence is stored internally and can be
+        retrieved with :meth:`get_directions`. If no path exists, the
+        internal path remains empty.
+
+        Args:
+            maze: Internal grid of cell wall bitmasks.
+            entry: Entry cell coordinates as ``(row, col)``.
+            exit: Exit cell coordinates as ``(row, col)``.
+        """
         # Init vars needed
         queue: list[tuple[int, int]] = []
         visited: set[tuple[int, int]] = set()
