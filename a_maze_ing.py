@@ -172,6 +172,19 @@ def setup_new_maze(
     return maze, maze_solution.get_directions()
 
 
+def save_output(
+    config: MazeConfig, maze: MazeGenerator, directions: str
+) -> None:
+    """Write the maze grid and solution to the configured output file."""
+    gen_maze_file(
+        config.output_file,
+        maze.get_maze(),
+        config.entry,
+        config.exit,
+        path_solution=directions,
+    )
+
+
 if __name__ == "__main__":
     sys.setrecursionlimit(3500)
 
@@ -183,10 +196,7 @@ if __name__ == "__main__":
 
     # FIRST CALL: Initial setup using the file's original seed
     maze, directions = setup_new_maze(config, use_seed=True)
-
-    # Save initial file setup
-    gen_maze_file(config.output_file, maze.get_maze(), config.entry,
-                  config.exit, path_solution=directions)
+    save_output(config, maze, directions)
 
     # Static list of ANSI escape codes for the wall colors
     # 34m = Blue, 32m = Green, 35m = Magenta, 36m = Cyan, 31m = Red
@@ -222,6 +232,7 @@ if __name__ == "__main__":
         if choice == "1":
             # Passing use_seed=False guarantees a completely fresh layout
             maze, directions = setup_new_maze(config, use_seed=False)
+            save_output(config, maze, directions)
             print("New maze generated successfully!")
         elif choice == "2":
             show_path = not show_path
