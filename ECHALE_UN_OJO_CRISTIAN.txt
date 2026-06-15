@@ -1,0 +1,1018 @@
+El análisis técnico detallado de los cambios aplicados en los archivos `solver.py` y `generator.py` es el siguiente:
+
+**1. `mazegen/solver.py**`
+
+* **Optimización de la cola (BFS):** Sustitución de `list` por `collections.deque`. Se reemplaza la extracción `queue.pop(0)` por `queue.popleft()`, reduciendo la complejidad temporal de cada extracción de $O(N)$ a $O(1)$.
+* **Optimización de memoria y tiempo en reconstrucción de ruta:** Eliminación de la llamada `self._path_cell.insert(0, current)`. Se sustituye por un bucle que utiliza `append()` (complejidad $O(1)$ amortizada) seguido de una inversión de la lista *in-place* con `path.reverse()`.
+* **Gestión de estado:** Adición de la limpieza de variables de instancia (`self._path_cell = []` y `self._directions = ""`) al inicio del método `solve()` para evitar retención de datos entre llamadas consecutivas.
+* **Cumplimiento PEP 257:** Inserción de docstrings estructurados (argumentos y valores de retorno) en los métodos `__init__`, `get_available_neighbors`, `direction` y `get_directions`.
+
+**2. `mazegen/generator.py**`
+
+* **Eliminación de recursividad (DFS):** Refactorización del método `backtracker` de una función recursiva pura a una implementación iterativa. Esto previene los desbordamientos de pila (`RecursionError`) delegando el control de profundidad a la memoria *heap*.
+* **Control de estado en la pila:** Implementación de una máquina de estados mediante tuplas `StackFrame` (`tuple[tuple[int, int], list[int], int]`). Se almacena la coordenada actual, la permutación aleatoria de los vecinos y el índice de iteración. Esto garantiza que la transición iterativa emule con exactitud el comportamiento recursivo original.
+* **Optimización de búsqueda espacial:** Modificación de la variable de seguimiento `visited`. El argumento de entrada (lista) se convierte inmediatamente en un conjunto (`visited: set[tuple[int, int]] = set(blocked)`). Las verificaciones de colisión (`neighbor_cell in visited`) reducen su complejidad de $O(N)$ a $O(1)$.
+* **Simplificación en `generate()`:** Eliminación de la construcción redundante de listas `visited`. Se pasa el valor de retorno de `pattern_42()` directamente como argumento `blocked` a `backtracker()`.
+* **Cumplimiento PEP 257:** Inserción de docstrings estructurados en los métodos `__init__`, `imperfect_walls`, `backtracker` y `get_maze`.
+
+
+========== mazegen/solver.py - ANTIGUO (HEAD~1) ==========
+#!/usr/bin/env python3
+# ########################################################################### #
+#   shebang: 1                                                                #
+#                                                          :::      ::::::::  #
+#   solver.py                                            :+:      :+:    :+:  #
+#                                                      +:+ +:+         +:+    #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#                                                  +#+#+#+#+#+   +#+          #
+#   Created: 2026/06/12 10:50:56 by czuluaga            #+#    #+#            #
+#   Updated: 2026/06/13 15:34:23 by alejandr           ###   ########.fr      #
+#                                                                             #
+# ########################################################################### #
+
+
+class NoSolutionError(Exception):
+    """Raised when no path exists between entry and exit."""
+
+
+class MazeSolver:
+    def __init__(self, width: int, height: int) -> None:
+        self._directions: str = ""
+        self._path_cell: list[tuple[int, int]] = []
+        self._width: int = width
+        self._height: int = height
+
+    # BITMASKS: class attributes
+    NORTH: int = 0b0001
+    EAST: int = 0b0010
+    SOUTH: int = 0b0100
+    WEST:  int = 0b1000
+
+    @staticmethod
+    def neighbor_coords(current_location: tuple[int, int],
+                        neighbor: int) -> tuple[int, int]:
+        """Calculates the neighbor coordinates relative to the current cell
+        location.
+
+        Args:
+            current_location (tuple[int, int]): Current cell location
+            neighbor (int): Neighbor descriptor
+            0 -> North
+            1 -> East
+            2 -> South
+            3 -> West
+
+        Raises:
+            Exception: In case the neighbor descriptor in not known
+
+        Returns:
+            tuple[int, int]: Relative neighbor coordinates
+        """
+        match neighbor:
+            case 0:
+                return (current_location[0] - 1, current_location[1])
+            case 1:
+                return (current_location[0], current_location[1] + 1)
+            case 2:
+                return (current_location[0] + 1, current_location[1])
+            case 3:
+                return (current_location[0], current_location[1] - 1)
+            case _:
+                raise Exception("Unknown Neighbor")
+
+    def out_of_bounds(self, cell_coords: tuple[int, int]) -> bool:
+        """Checks if the cell coords given is inside the maze
+
+        Args:
+            cell_coords (tuple[int, int]): Cell coords to check
+
+        Returns:
+            bool: True if coords are out of bounds, False otherwise
+        """
+        if cell_coords[0] < 0 or cell_coords[0] > self._height - 1:
+            return True
+        if cell_coords[1] < 0 or cell_coords[1] > self._width - 1:
+            return True
+        return False
+
+    @staticmethod
+    def get_available_neighbors(cell: int) -> list[int]:
+        neighbors: list[int] = []
+        for n in range(4):
+            if not (cell >> n) & 1:
+                neighbors.append(n)
+        return neighbors
+
+    def solve(self,
+              maze: list[list[int]],
+              entry: tuple[int, int],
+              exit: tuple[int, int]) -> None:
+        """Find the shortest path from entry to exit using BFS.
+
+        The resulting cell sequence is stored internally and can be
+        retrieved with :meth:`get_directions`, which raises
+        :class:`NoSolutionError` if BFS finds no path.
+
+        Args:
+            maze: Internal grid of cell wall bitmasks.
+            entry: Entry cell coordinates as ``(row, col)``.
+            exit: Exit cell coordinates as ``(row, col)``.
+        """
+        # Init vars needed
+        queue: list[tuple[int, int]] = []
+        visited: set[tuple[int, int]] = set()
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {}
+
+        parent[entry] = None
+
+        queue.append(entry)
+
+        visited.add(entry)
+
+        while queue:
+            cell: tuple[int, int] = queue.pop(0)
+
+            if cell == exit:
+                current: tuple[int, int] | None = exit
+                while current is not None:
+                    self._path_cell.insert(0, current)
+                    current = parent[current]
+                return
+
+            cell_value: int = maze[cell[0]][cell[1]]
+            neighbors: list[int] = self.get_available_neighbors(cell_value)
+
+            for neighbor in neighbors:
+                n: tuple[int, int] = self.neighbor_coords(cell, neighbor)
+                if n not in visited and not self.out_of_bounds(n):
+                    visited.add(n)
+                    parent[n] = cell
+                    queue.append(n)
+
+    @staticmethod
+    def direction(current: tuple[int, int], next: tuple[int, int]) -> str:
+        row_c, col_c = current
+        row_n, col_n = next
+
+        if row_c == row_n:
+            if col_c < col_n:
+                return "E"
+            else:
+                return "W"
+        elif row_c < row_n:
+            return "S"
+        else:
+            return "N"
+
+    def get_directions(self) -> str:
+        if not self._path_cell:
+            raise NoSolutionError(
+                "No solutions available for the maze"
+            )
+
+        directions: str = ""
+
+        for i in range(len(self._path_cell) - 1):
+            directions += self.direction(self._path_cell[i],
+                                         self._path_cell[i + 1])
+
+        self._directions = directions
+
+        return directions
+
+========== mazegen/solver.py - NUEVO (HEAD) ==========
+#!/usr/bin/env python3
+# ########################################################################### #
+#   shebang: 1                                                                #
+#                                                          :::      ::::::::  #
+#   solver.py                                            :+:      :+:    :+:  #
+#                                                      +:+ +:+         +:+    #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#                                                  +#+#+#+#+#+   +#+          #
+#   Created: 2026/06/12 10:50:56 by czuluaga            #+#    #+#            #
+#   Updated: 2026/06/13 15:34:23 by alejandr           ###   ########.fr      #
+#                                                                             #
+# ########################################################################### #
+
+from collections import deque
+
+
+class NoSolutionError(Exception):
+    """Raised when no path exists between entry and exit."""
+
+
+class MazeSolver:
+    def __init__(self, width: int, height: int) -> None:
+        """Initialize a maze solver for a grid of the given size.
+
+        Args:
+            width: Number of columns in the maze grid.
+            height: Number of rows in the maze grid.
+        """
+        self._directions: str = ""
+        self._path_cell: list[tuple[int, int]] = []
+        self._width: int = width
+        self._height: int = height
+
+    # BITMASKS: class attributes
+    NORTH: int = 0b0001
+    EAST: int = 0b0010
+    SOUTH: int = 0b0100
+    WEST:  int = 0b1000
+
+    @staticmethod
+    def neighbor_coords(current_location: tuple[int, int],
+                        neighbor: int) -> tuple[int, int]:
+        """Calculates the neighbor coordinates relative to the current cell
+        location.
+
+        Args:
+            current_location (tuple[int, int]): Current cell location
+            neighbor (int): Neighbor descriptor
+            0 -> North
+            1 -> East
+            2 -> South
+            3 -> West
+
+        Raises:
+            Exception: In case the neighbor descriptor in not known
+
+        Returns:
+            tuple[int, int]: Relative neighbor coordinates
+        """
+        match neighbor:
+            case 0:
+                return (current_location[0] - 1, current_location[1])
+            case 1:
+                return (current_location[0], current_location[1] + 1)
+            case 2:
+                return (current_location[0] + 1, current_location[1])
+            case 3:
+                return (current_location[0], current_location[1] - 1)
+            case _:
+                raise Exception("Unknown Neighbor")
+
+    def out_of_bounds(self, cell_coords: tuple[int, int]) -> bool:
+        """Checks if the cell coords given is inside the maze
+
+        Args:
+            cell_coords (tuple[int, int]): Cell coords to check
+
+        Returns:
+            bool: True if coords are out of bounds, False otherwise
+        """
+        if cell_coords[0] < 0 or cell_coords[0] > self._height - 1:
+            return True
+        if cell_coords[1] < 0 or cell_coords[1] > self._width - 1:
+            return True
+        return False
+
+    @staticmethod
+    def get_available_neighbors(cell: int) -> list[int]:
+        """Return open neighbor directions for a cell bitmask.
+
+        Args:
+            cell: 4-bit wall bitmask (1 = closed wall).
+
+        Returns:
+            list[int]: Direction indices (0=N, 1=E, 2=S, 3=W) without walls.
+        """
+        neighbors: list[int] = []
+        for n in range(4):
+            if not (cell >> n) & 1:
+                neighbors.append(n)
+        return neighbors
+
+    def solve(self,
+              maze: list[list[int]],
+              entry: tuple[int, int],
+              exit: tuple[int, int]) -> None:
+        """Find the shortest path from entry to exit using BFS.
+
+        The resulting cell sequence is stored internally and can be
+        retrieved with :meth:`get_directions`, which raises
+        :class:`NoSolutionError` if BFS finds no path.
+
+        Args:
+            maze: Internal grid of cell wall bitmasks.
+            entry: Entry cell coordinates as ``(row, col)``.
+            exit: Exit cell coordinates as ``(row, col)``.
+        """
+        self._path_cell = []
+        self._directions = ""
+
+        queue: deque[tuple[int, int]] = deque([entry])
+        visited: set[tuple[int, int]] = set()
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {}
+
+        parent[entry] = None
+        visited.add(entry)
+
+        while queue:
+            cell: tuple[int, int] = queue.popleft()
+
+            if cell == exit:
+                path: list[tuple[int, int]] = []
+                current: tuple[int, int] | None = exit
+                while current is not None:
+                    path.append(current)
+                    current = parent[current]
+                path.reverse()
+                self._path_cell = path
+                return
+
+            cell_value: int = maze[cell[0]][cell[1]]
+            neighbors: list[int] = self.get_available_neighbors(cell_value)
+
+            for neighbor in neighbors:
+                n: tuple[int, int] = self.neighbor_coords(cell, neighbor)
+                if n not in visited and not self.out_of_bounds(n):
+                    visited.add(n)
+                    parent[n] = cell
+                    queue.append(n)
+
+    @staticmethod
+    def direction(current: tuple[int, int], next: tuple[int, int]) -> str:
+        """Map a single step between adjacent cells to a cardinal letter.
+
+        Args:
+            current: Current cell coordinates ``(row, col)``.
+            next: Next cell coordinates ``(row, col)``.
+
+        Returns:
+            str: One of ``N``, ``E``, ``S``, or ``W``.
+        """
+        row_c, col_c = current
+        row_n, col_n = next
+
+        if row_c == row_n:
+            if col_c < col_n:
+                return "E"
+            else:
+                return "W"
+        elif row_c < row_n:
+            return "S"
+        else:
+            return "N"
+
+    def get_directions(self) -> str:
+        """Return the shortest path as a string of cardinal directions.
+
+        Returns:
+            str: Concatenated ``N``/``E``/``S``/``W`` steps from entry to exit.
+
+        Raises:
+            NoSolutionError: If :meth:`solve` found no path.
+        """
+        if not self._path_cell:
+            raise NoSolutionError(
+                "No solutions available for the maze"
+            )
+
+        directions = "".join(
+            self.direction(self._path_cell[i], self._path_cell[i + 1])
+            for i in range(len(self._path_cell) - 1)
+        )
+
+        self._directions = directions
+
+        return directions
+
+========== mazegen/generator.py - ANTIGUO (HEAD~1) ==========
+#!/usr/bin/env python3
+# ########################################################################### #
+#   shebang: 1                                                                #
+#                                                          :::      ::::::::  #
+#   generator.py                                         :+:      :+:    :+:  #
+#                                                      +:+ +:+         +:+    #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#                                                  +#+#+#+#+#+   +#+          #
+#   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
+#   Updated: 2026/06/15 13:26:18 by alejandr           ###   ########.fr      #
+#                                                                             #
+# ########################################################################### #
+
+import random
+import sys
+
+
+class InvalidPlacementError(Exception):
+    """Raised when ENTRY or EXIT is on the '42' pattern."""
+
+
+class MazeGenerator:
+    def __init__(self, width: int, height: int, seed: int | None = None,
+                 perfect: bool = True) -> None:
+        self._maze: list[list[int]] = [[15 for _ in range(width)]
+                                       for _ in range(height)]
+        self._width: int = width
+        self._height: int = height
+        self._seed: int | None = seed
+        self._perfect: bool = perfect
+        self._pattern_fits: bool = True
+
+    # BITMASKS: class attributes
+    NORTH: int = 0b0001
+    EAST: int = 0b0010
+    SOUTH: int = 0b0100
+    WEST:  int = 0b1000
+
+    pattern: list[tuple[int, int]] = [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2),
+                                      (3, 2), (4, 2), (0, 4), (0, 5), (0, 6),
+                                      (1, 6), (2, 6), (2, 5), (2, 4), (3, 4),
+                                      (4, 4), (4, 5), (4, 6)]
+
+    @staticmethod
+    def neighbor_coords(current_location: tuple[int, int],
+                        neighbor: int) -> tuple[int, int]:
+        """Calculates the neighbor coordinates relative to the current cell
+        location.
+
+        Args:
+            current_location (tuple[int, int]): Current cell location
+            neighbor (int): Neighbor descriptor
+            0 -> North
+            1 -> East
+            2 -> South
+            3 -> West
+
+        Raises:
+            Exception: In case the neighbor descriptor in not known
+
+        Returns:
+            tuple[int, int]: Relative neighbor coordinates
+        """
+        match neighbor:
+            case 0:
+                return (current_location[0] - 1, current_location[1])
+            case 1:
+                return (current_location[0], current_location[1] + 1)
+            case 2:
+                return (current_location[0] + 1, current_location[1])
+            case 3:
+                return (current_location[0], current_location[1] - 1)
+            case _:
+                raise Exception("Unknown Neighbor")
+
+    def out_of_bounds(self, cell_coords: tuple[int, int]) -> bool:
+        """Checks if the cell coords given is inside the maze
+
+        Args:
+            cell_coords (tuple[int, int]): Cell coords to check
+
+        Returns:
+            bool: True if coords are out of bounds, False otherwise
+        """
+        if cell_coords[0] < 0 or cell_coords[0] > self._height - 1:
+            return True
+        if cell_coords[1] < 0 or cell_coords[1] > self._width - 1:
+            return True
+        return False
+
+    def open_wall(self,
+                  location: tuple[int, int],
+                  neighbor_coords: tuple[int, int],
+                  neighbor: int) -> None:
+        """Opens wall between neighbors
+
+        Args:
+            location (tuple[int, int]): Current cell location
+            neighbor_coords (tuple[int, int]): Neighbor cell location
+            neighbor (int): Describe the relative position of the neighbor
+            0 -> North
+            1 -> East
+            2 -> South
+            3 -> West
+
+        Raises:
+            Exception: If the neighbor descriptor is none of the previous
+            values
+        """
+        match neighbor:
+            case 0:
+                # Open North on current location
+                x, y = location
+                self._maze[x][y] &= ~self.NORTH
+                # Open South on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.SOUTH
+            case 1:
+                # Open East on current location
+                x, y = location
+                self._maze[x][y] &= ~self.EAST
+                # Open West on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.WEST
+            case 2:
+                # Open South on current location
+                x, y = location
+                self._maze[x][y] &= ~self.SOUTH
+                # Open North on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.NORTH
+            case 3:
+                # Open West on current location
+                x, y = location
+                self._maze[x][y] &= ~self.WEST
+                # Open East on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.EAST
+            case _:
+                raise Exception("Unknown neighbor, Can't open wall!!")
+
+    def imperfect_walls(self) -> None:
+        # Defining sets needed
+        available_cells: set[tuple[int, int]] = set()
+        pattern_cells: set[tuple[int, int]] = set()
+        maze_cells: set[tuple[int, int]] = set()
+
+        # Get coords for every cell in maze
+        for i in range(self._height):
+            for j in range(self._width):
+                maze_cells.add((i, j))
+
+        if self._pattern_fits:
+            # Get the coords from the pattern cells
+            pattern_cells = set(self.pattern)
+            # get the cells not in 42 pattern with sets difference
+            available_cells = maze_cells.difference(pattern_cells)
+        else:
+            available_cells = maze_cells
+
+        # Choose a random number of walls to open
+        random_cells: list[tuple[int, int]] = list()
+        available_list = list(available_cells)
+        random_cells = random.sample(available_list,
+                                     k=random.randint(1, len(available_list)))
+        #   Open a random wall until no more changes needed to be
+        for cell in random_cells:
+            for n in random.sample([0, 1, 2, 3], k=4):
+                n_coords: tuple[int, int] = self.neighbor_coords(cell, n)
+                if n_coords in pattern_cells or self.out_of_bounds(n_coords):
+                    continue
+                else:
+                    self.open_wall(cell, n_coords, n)
+                    break
+        self._fix_density()
+
+    def backtracker(self,
+                    location: tuple[int, int],
+                    visited: list[tuple[int, int]]) -> None:
+        """Recursive DFS to generate the maze walls
+
+        Args:
+            location (tuple[int, int]): Any cell coords
+            visited (list[tuple[int, int]]): List of already visited cells
+        """
+        # Add current location to visited list
+        visited.append(location)
+
+        # Loop over the four neighbours in random order
+        to_visit: list[int] = random.sample([0, 1, 2, 3], k=4)
+        for neighbor in to_visit:
+            # Get neighbor's coords
+            neighbor_cell: tuple[int, int] = self.neighbor_coords(location,
+                                                                  neighbor)
+
+            # if already visited or out of bounds -> skip
+            if neighbor_cell in visited or self.out_of_bounds(neighbor_cell):
+                continue
+
+            # Open Wall
+            self.open_wall(location, neighbor_cell, neighbor)
+
+            # Recursive call, setting the location to the neighbor just visited
+            self.backtracker(neighbor_cell, visited)
+
+    def pattern_42(self) -> list[tuple[int, int]]:
+        """Takes the deafult pattern inside the class and applies an x and
+        y offset to it's coordinates
+
+        Returns:
+            list[tuple[int, int]]: Returns the pattern after offset
+            has been applied.
+        """
+        # If maze is too small 42 pattern does not fit
+        if self._height < 7 or self._width < 9:
+            self._pattern_fits = False
+            print("Error: Maze size too small to fit the '42' pattern.",
+                  file=sys.stderr)
+            return []
+
+        # Else calculate offset to apply to default pattern
+        x_offset: int = int(self._width / 2) - 3
+        y_offset: int = int(self._height / 2) - 2
+
+        self.pattern = [(cell[0] + y_offset, cell[1] + x_offset)
+                        for cell in MazeGenerator.pattern]
+        return self.pattern
+
+    def generate(self, entry: tuple[int, int], exit_coord: tuple[int, int]
+                 ) -> None:
+        """Generate the maze.
+        If there is a seed it sets the random module seed to that value.
+
+        Args:
+            entry (tuple[int, int]): Entry cell coordinates (row, col).
+            exit_coord (tuple[int, int]): Exit cell coordinates (row, col).
+        """
+        if self._seed is not None:
+            random.seed(self._seed)
+
+        self._maze = [
+            [15 for _ in range(self._width)]
+            for _ in range(self._height)
+        ]
+        self._pattern_fits = True
+
+        pattern_cells = self.pattern_42()
+        if entry in pattern_cells or exit_coord in pattern_cells:
+            raise InvalidPlacementError(
+                "ENTRY or EXIT is on the '42' pattern."
+            )
+        visited: list[tuple[int, int]] = []
+        visited += pattern_cells
+        self.backtracker(entry, visited)
+        # After generation, if PERFECT is false -> open some walls
+        if self._perfect is False:
+            self.imperfect_walls()
+
+    def get_maze(self) -> list[list[int]]:
+        return self._maze
+
+    def _fix_density(self) -> None:
+        """
+        Scans the maze matrix using a sliding window to detect 3x3 open areas
+        and strategically builds a wall to break them up.
+        """
+        # Iterate through all possible 3x3 subgrid starting positions
+        for r in range(self._height - 2):
+            for c in range(self._width - 2):
+
+                is_3x3_open = True
+
+                # 1. Validate the 6 internal horizontal connections
+                # (EAST walls = 0b0010)
+                for sub_r in range(r, r + 3):
+                    for sub_c in range(c, c + 2):
+                        if (self._maze[sub_r][sub_c] & 0b0010) != 0:
+                            is_3x3_open = False
+                            break
+                    if not is_3x3_open:
+                        break
+
+                if not is_3x3_open:
+                    continue
+
+                # 2. Validate the 6 internal vertical connections
+                # (SOUTH walls = 0b0100)
+                for sub_r in range(r, r + 2):
+                    for sub_c in range(c, c + 3):
+                        if (self._maze[sub_r][sub_c] & 0b0100) != 0:
+                            is_3x3_open = False
+                            break
+                    if not is_3x3_open:
+                        break
+
+                # 3. If a 3x3 open area is found, close the wall
+                # between the center and east cell
+                if is_3x3_open:
+                    # Center cell coordinates: (r + 1, c + 1)
+                    # East neighbor coordinates: (r + 1, c + 2)
+
+                    # Apply bitwise OR to set the EAST bit (0b0010)
+                    # on the center cell
+                    self._maze[r + 1][c + 1] |= 0b0010
+
+                    # Apply bitwise OR to set the WEST bit (0b1000)
+                    # on the eastern neighbor
+                    self._maze[r + 1][c + 2] |= 0b1000
+
+========== mazegen/generator.py - NUEVO (HEAD) ==========
+#!/usr/bin/env python3
+# ########################################################################### #
+#   shebang: 1                                                                #
+#                                                          :::      ::::::::  #
+#   generator.py                                         :+:      :+:    :+:  #
+#                                                      +:+ +:+         +:+    #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#                                                  +#+#+#+#+#+   +#+          #
+#   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
+#   Updated: 2026/06/15 13:26:18 by alejandr           ###   ########.fr      #
+#                                                                             #
+# ########################################################################### #
+
+import random
+import sys
+
+
+class InvalidPlacementError(Exception):
+    """Raised when ENTRY or EXIT is on the '42' pattern."""
+
+
+class MazeGenerator:
+    def __init__(self, width: int, height: int, seed: int | None = None,
+                 perfect: bool = True) -> None:
+        """Initialize a maze generator.
+
+        Args:
+            width: Number of columns in the maze grid.
+            height: Number of rows in the maze grid.
+            seed: Optional random seed for reproducible generation.
+            perfect: If True, generate a perfect maze (spanning tree).
+        """
+        self._maze: list[list[int]] = [[15 for _ in range(width)]
+                                       for _ in range(height)]
+        self._width: int = width
+        self._height: int = height
+        self._seed: int | None = seed
+        self._perfect: bool = perfect
+        self._pattern_fits: bool = True
+
+    # BITMASKS: class attributes
+    NORTH: int = 0b0001
+    EAST: int = 0b0010
+    SOUTH: int = 0b0100
+    WEST:  int = 0b1000
+
+    pattern: list[tuple[int, int]] = [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2),
+                                      (3, 2), (4, 2), (0, 4), (0, 5), (0, 6),
+                                      (1, 6), (2, 6), (2, 5), (2, 4), (3, 4),
+                                      (4, 4), (4, 5), (4, 6)]
+
+    @staticmethod
+    def neighbor_coords(current_location: tuple[int, int],
+                        neighbor: int) -> tuple[int, int]:
+        """Calculates the neighbor coordinates relative to the current cell
+        location.
+
+        Args:
+            current_location (tuple[int, int]): Current cell location
+            neighbor (int): Neighbor descriptor
+            0 -> North
+            1 -> East
+            2 -> South
+            3 -> West
+
+        Raises:
+            Exception: In case the neighbor descriptor in not known
+
+        Returns:
+            tuple[int, int]: Relative neighbor coordinates
+        """
+        match neighbor:
+            case 0:
+                return (current_location[0] - 1, current_location[1])
+            case 1:
+                return (current_location[0], current_location[1] + 1)
+            case 2:
+                return (current_location[0] + 1, current_location[1])
+            case 3:
+                return (current_location[0], current_location[1] - 1)
+            case _:
+                raise Exception("Unknown Neighbor")
+
+    def out_of_bounds(self, cell_coords: tuple[int, int]) -> bool:
+        """Checks if the cell coords given is inside the maze
+
+        Args:
+            cell_coords (tuple[int, int]): Cell coords to check
+
+        Returns:
+            bool: True if coords are out of bounds, False otherwise
+        """
+        if cell_coords[0] < 0 or cell_coords[0] > self._height - 1:
+            return True
+        if cell_coords[1] < 0 or cell_coords[1] > self._width - 1:
+            return True
+        return False
+
+    def open_wall(self,
+                  location: tuple[int, int],
+                  neighbor_coords: tuple[int, int],
+                  neighbor: int) -> None:
+        """Opens wall between neighbors
+
+        Args:
+            location (tuple[int, int]): Current cell location
+            neighbor_coords (tuple[int, int]): Neighbor cell location
+            neighbor (int): Describe the relative position of the neighbor
+            0 -> North
+            1 -> East
+            2 -> South
+            3 -> West
+
+        Raises:
+            Exception: If the neighbor descriptor is none of the previous
+            values
+        """
+        match neighbor:
+            case 0:
+                # Open North on current location
+                x, y = location
+                self._maze[x][y] &= ~self.NORTH
+                # Open South on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.SOUTH
+            case 1:
+                # Open East on current location
+                x, y = location
+                self._maze[x][y] &= ~self.EAST
+                # Open West on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.WEST
+            case 2:
+                # Open South on current location
+                x, y = location
+                self._maze[x][y] &= ~self.SOUTH
+                # Open North on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.NORTH
+            case 3:
+                # Open West on current location
+                x, y = location
+                self._maze[x][y] &= ~self.WEST
+                # Open East on neighbor location
+                x, y = neighbor_coords
+                self._maze[x][y] &= ~self.EAST
+            case _:
+                raise Exception("Unknown neighbor, Can't open wall!!")
+
+    def imperfect_walls(self) -> None:
+        """Open extra walls for imperfect mazes and enforce density rules."""
+        # Defining sets needed
+        available_cells: set[tuple[int, int]] = set()
+        pattern_cells: set[tuple[int, int]] = set()
+        maze_cells: set[tuple[int, int]] = set()
+
+        # Get coords for every cell in maze
+        for i in range(self._height):
+            for j in range(self._width):
+                maze_cells.add((i, j))
+
+        if self._pattern_fits:
+            # Get the coords from the pattern cells
+            pattern_cells = set(self.pattern)
+            # get the cells not in 42 pattern with sets difference
+            available_cells = maze_cells.difference(pattern_cells)
+        else:
+            available_cells = maze_cells
+
+        # Choose a random number of walls to open
+        random_cells: list[tuple[int, int]] = list()
+        available_list = list(available_cells)
+        random_cells = random.sample(available_list,
+                                     k=random.randint(1, len(available_list)))
+        #   Open a random wall until no more changes needed to be
+        for cell in random_cells:
+            for n in random.sample([0, 1, 2, 3], k=4):
+                n_coords: tuple[int, int] = self.neighbor_coords(cell, n)
+                if n_coords in pattern_cells or self.out_of_bounds(n_coords):
+                    continue
+                else:
+                    self.open_wall(cell, n_coords, n)
+                    break
+        self._fix_density()
+
+    def backtracker(self,
+                    start: tuple[int, int],
+                    blocked: list[tuple[int, int]]) -> None:
+        """Iterative DFS to carve maze walls from the entry cell.
+
+        Args:
+            start: Starting cell coordinates ``(row, col)``.
+            blocked: Cells that must remain closed (e.g. the ``42`` pattern).
+        """
+        StackFrame = tuple[tuple[int, int], list[int], int]
+        visited: set[tuple[int, int]] = set(blocked)
+        visited.add(start)
+        stack: list[StackFrame] = [
+            (start, random.sample([0, 1, 2, 3], k=4), 0),
+        ]
+
+        while stack:
+            location, order, idx = stack[-1]
+
+            if idx == len(order):
+                stack.pop()
+                continue
+
+            stack[-1] = (location, order, idx + 1)
+            neighbor = order[idx]
+            neighbor_cell = self.neighbor_coords(location, neighbor)
+
+            if neighbor_cell in visited or self.out_of_bounds(neighbor_cell):
+                continue
+
+            self.open_wall(location, neighbor_cell, neighbor)
+            visited.add(neighbor_cell)
+            stack.append(
+                (neighbor_cell, random.sample([0, 1, 2, 3], k=4), 0)
+            )
+
+    def pattern_42(self) -> list[tuple[int, int]]:
+        """Takes the deafult pattern inside the class and applies an x and
+        y offset to it's coordinates
+
+        Returns:
+            list[tuple[int, int]]: Returns the pattern after offset
+            has been applied.
+        """
+        # If maze is too small 42 pattern does not fit
+        if self._height < 7 or self._width < 9:
+            self._pattern_fits = False
+            print("Error: Maze size too small to fit the '42' pattern.",
+                  file=sys.stderr)
+            return []
+
+        # Else calculate offset to apply to default pattern
+        x_offset: int = int(self._width / 2) - 3
+        y_offset: int = int(self._height / 2) - 2
+
+        self.pattern = [(cell[0] + y_offset, cell[1] + x_offset)
+                        for cell in MazeGenerator.pattern]
+        return self.pattern
+
+    def generate(self, entry: tuple[int, int], exit_coord: tuple[int, int]
+                 ) -> None:
+        """Generate the maze.
+        If there is a seed it sets the random module seed to that value.
+
+        Args:
+            entry (tuple[int, int]): Entry cell coordinates (row, col).
+            exit_coord (tuple[int, int]): Exit cell coordinates (row, col).
+        """
+        if self._seed is not None:
+            random.seed(self._seed)
+
+        self._maze = [
+            [15 for _ in range(self._width)]
+            for _ in range(self._height)
+        ]
+        self._pattern_fits = True
+
+        pattern_cells = self.pattern_42()
+        if entry in pattern_cells or exit_coord in pattern_cells:
+            raise InvalidPlacementError(
+                "ENTRY or EXIT is on the '42' pattern."
+            )
+        self.backtracker(entry, pattern_cells)
+        # After generation, if PERFECT is false -> open some walls
+        if self._perfect is False:
+            self.imperfect_walls()
+
+    def get_maze(self) -> list[list[int]]:
+        """Return the internal maze grid of wall bitmasks.
+
+        Returns:
+            list[list[int]]: Row-major grid of 4-bit cell values.
+        """
+        return self._maze
+
+    def _fix_density(self) -> None:
+        """
+        Scans the maze matrix using a sliding window to detect 3x3 open areas
+        and strategically builds a wall to break them up.
+        """
+        # Iterate through all possible 3x3 subgrid starting positions
+        for r in range(self._height - 2):
+            for c in range(self._width - 2):
+
+                is_3x3_open = True
+
+                # 1. Validate the 6 internal horizontal connections
+                # (EAST walls = 0b0010)
+                for sub_r in range(r, r + 3):
+                    for sub_c in range(c, c + 2):
+                        if (self._maze[sub_r][sub_c] & 0b0010) != 0:
+                            is_3x3_open = False
+                            break
+                    if not is_3x3_open:
+                        break
+
+                if not is_3x3_open:
+                    continue
+
+                # 2. Validate the 6 internal vertical connections
+                # (SOUTH walls = 0b0100)
+                for sub_r in range(r, r + 2):
+                    for sub_c in range(c, c + 3):
+                        if (self._maze[sub_r][sub_c] & 0b0100) != 0:
+                            is_3x3_open = False
+                            break
+                    if not is_3x3_open:
+                        break
+
+                # 3. If a 3x3 open area is found, close the wall
+                # between the center and east cell
+                if is_3x3_open:
+                    # Center cell coordinates: (r + 1, c + 1)
+                    # East neighbor coordinates: (r + 1, c + 2)
+
+                    # Apply bitwise OR to set the EAST bit (0b0010)
+                    # on the center cell
+                    self._maze[r + 1][c + 1] |= 0b0010
+
+                    # Apply bitwise OR to set the WEST bit (0b1000)
+                    # on the eastern neighbor
+                    self._maze[r + 1][c + 2] |= 0b1000
