@@ -1,5 +1,32 @@
-__pycache__
-.mypy_cache
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Type checking / lint caches
+.mypy_cache/
+.ruff_cache/
+
+# Test caches
+.pytest_cache/
+.pytest_cache
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.verify_venv/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Generated maze output
 maze.txt
+
+# Subject validator (provided separately, not part of submission)
 output_validator.py
-dist/*
