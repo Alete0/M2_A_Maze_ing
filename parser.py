@@ -129,6 +129,6 @@ def load_config(file_path: str) -> MazeConfig:
         )
 
     except ValueError as ve:
-        print(f"Validation error on the cofiguration values: {ve}",
+        print(f"Validation error on the configuration values: {ve}",
               file=sys.stderr)
         sys.exit(1)
