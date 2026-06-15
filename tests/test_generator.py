@@ -16,7 +16,7 @@ from conftest import (
     count_open_edges,
     flood_fill,
 )
-from mazegen.generator import MazeGenerator
+from mazegen.generator import InvalidPlacementError, MazeGenerator
 
 
 @pytest.mark.parametrize(
@@ -132,14 +132,13 @@ def test_mapa_pequeno_sin_patron_sigue_valido(capsys):
     assert len(visited) == 5 * 5
 
 
-def test_entry_en_patron_42_aborta(capsys):
-    """IV.4: ENTRY on pattern → error and exit."""
+def test_entry_en_patron_42_aborta():
+    """IV.4: ENTRY on pattern → InvalidPlacementError."""
     gen = MazeGenerator(15, 15, seed=1, perfect=True)
     gen.pattern_42()
     entry_on_pattern = gen.pattern[0]
-    with pytest.raises(SystemExit):
+    with pytest.raises(InvalidPlacementError, match="42"):
         gen.generate(entry_on_pattern, (14, 14))
-    assert "42" in capsys.readouterr().err
 
 
 def test_perfect_false_mantiene_coherencia_y_sin_3x3():

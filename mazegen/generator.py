@@ -15,6 +15,10 @@ import random
 import sys
 
 
+class InvalidPlacementError(Exception):
+    """Raised when ENTRY or EXIT is on the '42' pattern."""
+
+
 class MazeGenerator:
     def __init__(self, width: int, height: int, seed: int | None = None,
                  perfect: bool = True) -> None:
@@ -234,20 +238,14 @@ class MazeGenerator:
         if self._seed is not None:
             random.seed(self._seed)
 
-        try:
-            pattern_cells = self.pattern_42()
-            if entry in pattern_cells or exit_coord in pattern_cells:
-                print("Error: ENTRY or EXIT is on the '42' pattern.",
-                      file=sys.stderr)
-                sys.exit(1)
-            visited: list[tuple[int, int]] = []
-            visited += pattern_cells
-            self.backtracker(entry, visited)
-        except SystemExit:
-            raise
-        except Exception as e:
-            print(e)
-            exit(1)
+        pattern_cells = self.pattern_42()
+        if entry in pattern_cells or exit_coord in pattern_cells:
+            raise InvalidPlacementError(
+                "ENTRY or EXIT is on the '42' pattern."
+            )
+        visited: list[tuple[int, int]] = []
+        visited += pattern_cells
+        self.backtracker(entry, visited)
         # After generation, if PERFECT is false -> open some walls
         if self._perfect is False:
             self.imperfect_walls()

@@ -13,6 +13,7 @@
 
 import sys
 from mazegen import MazeGenerator, MazeSolver
+from mazegen.generator import InvalidPlacementError
 from mazegen.solver import NoSolutionError
 from parser import MazeConfig, load_config
 from typing import Set, Tuple
@@ -210,6 +211,8 @@ if __name__ == "__main__":
         maze, directions = setup_new_maze(config, use_seed=True)
     except NoSolutionError:
         _report_fatal_error(_NO_PATH_MSG)
+    except InvalidPlacementError as exc:
+        _report_fatal_error(str(exc))
     except Exception as exc:
         _report_fatal_error(str(exc))
 
@@ -252,6 +255,9 @@ if __name__ == "__main__":
                 maze, directions = setup_new_maze(config, use_seed=False)
             except NoSolutionError:
                 print(f"Error: {_NO_PATH_MSG}", file=sys.stderr)
+                continue
+            except InvalidPlacementError as exc:
+                print(f"Error: {exc}", file=sys.stderr)
                 continue
             except Exception as exc:
                 print(f"Error: {exc}", file=sys.stderr)
