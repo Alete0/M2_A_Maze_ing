@@ -19,7 +19,7 @@ from encoder import gen_maze_file
 
 # BITMASKS
 NORTH: int = 0b0001
-EAST:  int = 0b0010
+EAST: int = 0b0010
 SOUTH: int = 0b0100
 WEST:  int = 0b1000
 
@@ -138,7 +138,9 @@ def print_maze(maze: list[list[int]], entry: Coord, exit: Coord,
 
 
 # Helper function to encapsulate maze creation and solving logic
-def setup_new_maze(config: MazeConfig, use_seed: bool = True):
+def setup_new_maze(
+    config: MazeConfig, use_seed: bool = True
+) -> tuple[MazeGenerator, str]:
     """
     Instantiates, generates, and solves a maze based on the configuration.
     Allows disabling the seed for random re-generation.
