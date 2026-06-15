@@ -238,6 +238,12 @@ class MazeGenerator:
         if self._seed is not None:
             random.seed(self._seed)
 
+        self._maze = [
+            [15 for _ in range(self._width)]
+            for _ in range(self._height)
+        ]
+        self._pattern_fits = True
+
         pattern_cells = self.pattern_42()
         if entry in pattern_cells or exit_coord in pattern_cells:
             raise InvalidPlacementError(
