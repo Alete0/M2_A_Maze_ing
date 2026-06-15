@@ -203,8 +203,6 @@ def save_output(
 
 
 if __name__ == "__main__":
-    sys.setrecursionlimit(3500)
-
     if len(sys.argv) != 2:
         print("Usage: <config_file>")
         exit(1)

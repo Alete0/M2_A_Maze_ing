@@ -11,6 +11,8 @@
 #                                                                             #
 # ########################################################################### #
 
+from collections import deque
+
 
 class NoSolutionError(Exception):
     """Raised when no path exists between entry and exit."""
@@ -18,6 +20,12 @@ class NoSolutionError(Exception):
 
 class MazeSolver:
     def __init__(self, width: int, height: int) -> None:
+        """Initialize a maze solver for a grid of the given size.
+
+        Args:
+            width: Number of columns in the maze grid.
+            height: Number of rows in the maze grid.
+        """
         self._directions: str = ""
         self._path_cell: list[tuple[int, int]] = []
         self._width: int = width
@@ -78,6 +86,14 @@ class MazeSolver:
 
     @staticmethod
     def get_available_neighbors(cell: int) -> list[int]:
+        """Return open neighbor directions for a cell bitmask.
+
+        Args:
+            cell: 4-bit wall bitmask (1 = closed wall).
+
+        Returns:
+            list[int]: Direction indices (0=N, 1=E, 2=S, 3=W) without walls.
+        """
         neighbors: list[int] = []
         for n in range(4):
             if not (cell >> n) & 1:
@@ -99,25 +115,27 @@ class MazeSolver:
             entry: Entry cell coordinates as ``(row, col)``.
             exit: Exit cell coordinates as ``(row, col)``.
         """
-        # Init vars needed
-        queue: list[tuple[int, int]] = []
+        self._path_cell = []
+        self._directions = ""
+
+        queue: deque[tuple[int, int]] = deque([entry])
         visited: set[tuple[int, int]] = set()
         parent: dict[tuple[int, int], tuple[int, int] | None] = {}
 
         parent[entry] = None
-
-        queue.append(entry)
-
         visited.add(entry)
 
         while queue:
-            cell: tuple[int, int] = queue.pop(0)
+            cell: tuple[int, int] = queue.popleft()
 
             if cell == exit:
+                path: list[tuple[int, int]] = []
                 current: tuple[int, int] | None = exit
                 while current is not None:
-                    self._path_cell.insert(0, current)
+                    path.append(current)
                     current = parent[current]
+                path.reverse()
+                self._path_cell = path
                 return
 
             cell_value: int = maze[cell[0]][cell[1]]
@@ -132,6 +150,15 @@ class MazeSolver:
 
     @staticmethod
     def direction(current: tuple[int, int], next: tuple[int, int]) -> str:
+        """Map a single step between adjacent cells to a cardinal letter.
+
+        Args:
+            current: Current cell coordinates ``(row, col)``.
+            next: Next cell coordinates ``(row, col)``.
+
+        Returns:
+            str: One of ``N``, ``E``, ``S``, or ``W``.
+        """
         row_c, col_c = current
         row_n, col_n = next
 
@@ -146,16 +173,23 @@ class MazeSolver:
             return "N"
 
     def get_directions(self) -> str:
+        """Return the shortest path as a string of cardinal directions.
+
+        Returns:
+            str: Concatenated ``N``/``E``/``S``/``W`` steps from entry to exit.
+
+        Raises:
+            NoSolutionError: If :meth:`solve` found no path.
+        """
         if not self._path_cell:
             raise NoSolutionError(
                 "No solutions available for the maze"
             )
 
-        directions: str = ""
-
-        for i in range(len(self._path_cell) - 1):
-            directions += self.direction(self._path_cell[i],
-                                         self._path_cell[i + 1])
+        directions = "".join(
+            self.direction(self._path_cell[i], self._path_cell[i + 1])
+            for i in range(len(self._path_cell) - 1)
+        )
 
         self._directions = directions
 

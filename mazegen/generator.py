@@ -22,6 +22,14 @@ class InvalidPlacementError(Exception):
 class MazeGenerator:
     def __init__(self, width: int, height: int, seed: int | None = None,
                  perfect: bool = True) -> None:
+        """Initialize a maze generator.
+
+        Args:
+            width: Number of columns in the maze grid.
+            height: Number of rows in the maze grid.
+            seed: Optional random seed for reproducible generation.
+            perfect: If True, generate a perfect maze (spanning tree).
+        """
         self._maze: list[list[int]] = [[15 for _ in range(width)]
                                        for _ in range(height)]
         self._width: int = width
@@ -140,6 +148,7 @@ class MazeGenerator:
                 raise Exception("Unknown neighbor, Can't open wall!!")
 
     def imperfect_walls(self) -> None:
+        """Open extra walls for imperfect mazes and enforce density rules."""
         # Defining sets needed
         available_cells: set[tuple[int, int]] = set()
         pattern_cells: set[tuple[int, int]] = set()
@@ -175,33 +184,40 @@ class MazeGenerator:
         self._fix_density()
 
     def backtracker(self,
-                    location: tuple[int, int],
-                    visited: list[tuple[int, int]]) -> None:
-        """Recursive DFS to generate the maze walls
+                    start: tuple[int, int],
+                    blocked: list[tuple[int, int]]) -> None:
+        """Iterative DFS to carve maze walls from the entry cell.
 
         Args:
-            location (tuple[int, int]): Any cell coords
-            visited (list[tuple[int, int]]): List of already visited cells
+            start: Starting cell coordinates ``(row, col)``.
+            blocked: Cells that must remain closed (e.g. the ``42`` pattern).
         """
-        # Add current location to visited list
-        visited.append(location)
+        StackFrame = tuple[tuple[int, int], list[int], int]
+        visited: set[tuple[int, int]] = set(blocked)
+        visited.add(start)
+        stack: list[StackFrame] = [
+            (start, random.sample([0, 1, 2, 3], k=4), 0),
+        ]
 
-        # Loop over the four neighbours in random order
-        to_visit: list[int] = random.sample([0, 1, 2, 3], k=4)
-        for neighbor in to_visit:
-            # Get neighbor's coords
-            neighbor_cell: tuple[int, int] = self.neighbor_coords(location,
-                                                                  neighbor)
+        while stack:
+            location, order, idx = stack[-1]
 
-            # if already visited or out of bounds -> skip
+            if idx == len(order):
+                stack.pop()
+                continue
+
+            stack[-1] = (location, order, idx + 1)
+            neighbor = order[idx]
+            neighbor_cell = self.neighbor_coords(location, neighbor)
+
             if neighbor_cell in visited or self.out_of_bounds(neighbor_cell):
                 continue
 
-            # Open Wall
             self.open_wall(location, neighbor_cell, neighbor)
-
-            # Recursive call, setting the location to the neighbor just visited
-            self.backtracker(neighbor_cell, visited)
+            visited.add(neighbor_cell)
+            stack.append(
+                (neighbor_cell, random.sample([0, 1, 2, 3], k=4), 0)
+            )
 
     def pattern_42(self) -> list[tuple[int, int]]:
         """Takes the deafult pattern inside the class and applies an x and
@@ -249,14 +265,17 @@ class MazeGenerator:
             raise InvalidPlacementError(
                 "ENTRY or EXIT is on the '42' pattern."
             )
-        visited: list[tuple[int, int]] = []
-        visited += pattern_cells
-        self.backtracker(entry, visited)
+        self.backtracker(entry, pattern_cells)
         # After generation, if PERFECT is false -> open some walls
         if self._perfect is False:
             self.imperfect_walls()
 
     def get_maze(self) -> list[list[int]]:
+        """Return the internal maze grid of wall bitmasks.
+
+        Returns:
+            list[list[int]]: Row-major grid of 4-bit cell values.
+        """
         return self._maze
 
     def _fix_density(self) -> None:
