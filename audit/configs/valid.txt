@@ -1,0 +1,8 @@
+# comment
+WIDTH=10
+HEIGHT=8
+ENTRY=0,0
+EXIT=9,7
+OUTPUT_FILE=out.txt
+PERFECT=True
+SEED=42

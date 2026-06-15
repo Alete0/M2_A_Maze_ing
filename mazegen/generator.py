@@ -27,7 +27,7 @@ class MazeGenerator:
 
     # BITMASKS: class attributes
     NORTH: int = 0b0001
-    EAST:  int = 0b0010
+    EAST: int = 0b0010
     SOUTH: int = 0b0100
     WEST:  int = 0b1000
 

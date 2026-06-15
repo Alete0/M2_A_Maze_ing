@@ -1,0 +1,9 @@
+# Entorno local de auditoría (regenerable con setup)
+.venv/
+
+# Salidas generadas al ejecutar run_audit.py (regenerables)
+outputs/*.txt
+
+# Cachés Python
+__pycache__/
+*.pyc

@@ -31,7 +31,18 @@ class MazeConfig:
 
 
 def load_config(file_path: str) -> MazeConfig:
+    """Load and validate maze configuration from a KEY=VALUE file.
 
+    Args:
+        file_path: Path to the configuration file.
+
+    Returns:
+        A validated MazeConfig instance.
+
+    Raises:
+        SystemExit: If the file is missing, malformed, or contains
+        invalid values.
+    """
     config_data = {}
 
     try:
