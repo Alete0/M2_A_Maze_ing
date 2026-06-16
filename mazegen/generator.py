@@ -7,7 +7,7 @@
 #   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/15 13:26:18 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/16 09:42:41 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -192,10 +192,9 @@ class MazeGenerator:
             start: Starting cell coordinates ``(row, col)``.
             blocked: Cells that must remain closed (e.g. the ``42`` pattern).
         """
-        StackFrame = tuple[tuple[int, int], list[int], int]
         visited: set[tuple[int, int]] = set(blocked)
         visited.add(start)
-        stack: list[StackFrame] = [
+        stack: list[tuple[tuple[int, int], list[int], int]] = [
             (start, random.sample([0, 1, 2, 3], k=4), 0),
         ]
 
