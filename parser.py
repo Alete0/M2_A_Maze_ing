@@ -2,12 +2,12 @@
 # ########################################################################### #
 #   shebang: 1                                                                #
 #                                                          :::      ::::::::  #
-#   config.py                                            :+:      :+:    :+:  #
+#   parser.py                                            :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:18 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/11 10:09:19 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/16 11:09:07 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -29,6 +29,20 @@ class MazeConfig:
     seed: Optional[int] = None
 
 
+def parse_coord(
+        coord_str: str, w: int, h: int, key_name: str
+        ) -> Coord:
+    parts = coord_str.split(',')
+    if len(parts) != 2:
+        raise ValueError(f"Format {key_name} invalid."
+                         "Must be 'x,y'.")
+    x, y = int(parts[0].strip()), int(parts[1].strip())
+    if not (0 <= x < w and 0 <= y < h):
+        raise ValueError(f"{key_name} ({x},{y}) out of the boundaries."
+                         f"X: 0-{w-1}, Y: 0-{h-1}.")
+    return (x, y)
+
+
 def load_config(file_path: str) -> MazeConfig:
     """Load and validate maze configuration from a KEY=VALUE file.
 
@@ -46,7 +60,7 @@ def load_config(file_path: str) -> MazeConfig:
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
+            for line_num, line in enumerate(f, start=1):
                 clean_line = line.split('#', 1)[0].strip()
                 if not clean_line:
                     continue
@@ -80,19 +94,6 @@ def load_config(file_path: str) -> MazeConfig:
         if width <= 0 or height <= 0:
             raise ValueError("WIDTH and HEIGHT must be positive"
                              "integer number (>0).")
-
-        def parse_coord(
-                coord_str: str, w: int, h: int, key_name: str
-                ) -> Coord:
-            parts = coord_str.split(',')
-            if len(parts) != 2:
-                raise ValueError(f"Format {key_name} invalid."
-                                 "Must be 'x,y'.")
-            x, y = int(parts[0].strip()), int(parts[1].strip())
-            if not (0 <= x < w and 0 <= y < h):
-                raise ValueError(f"{key_name} ({x},{y}) out of the boundaries."
-                                 f"X: 0-{w-1}, Y: 0-{h-1}.")
-            return (x, y)
 
         entry_coord = parse_coord(config_data['ENTRY'], width, height, 'ENTRY')
         exit_coord = parse_coord(config_data['EXIT'], width, height, 'EXIT')

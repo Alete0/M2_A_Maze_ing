@@ -72,8 +72,6 @@ Gemini helped us with:
 - **Tests** — ideas for edge cases and test structure in `tests/`; we reviewed and wrote the final assertions ourselves.
 - **Documentation** — drafting and improving parts of this README and related project documentation.
 
-All application logic (`parser.py`, `encoder.py`, `mazegen/`, `a_maze_ing.py`) was implemented and understood by the team without AI-generated code.
-
 ## Team Management
 
 ### Roles
