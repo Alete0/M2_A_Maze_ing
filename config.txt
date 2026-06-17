@@ -1,6 +1,12 @@
-WIDTH=20
-HEIGHT=20
+WIDTH=10
+HEIGHT=10
 ENTRY=2,2
-EXIT=15,13
+EXIT=0,0
 OUTPUT_FILE=maze.txt
-PERFECT=False
+PERFECT=truE
+
+
+# Bugs encontrados:
+# hola=ofka, si se le pasa un par desconocido se lo traga y no hace nada
+# PERFECT=true por la forma en que está codeado es indiferente el true del True
+# es decir se le puede pasar trUe, TRue, ... y lo mismo con false.
