@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/18 10:24:25 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/18 13:02:58 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -240,9 +240,7 @@ if __name__ == "__main__":
             _ = system('cls')
         else:
             _ = system('clear')
-        pattern_cells = (
-            set(maze.pattern) if maze._pattern_fits else set()
-        )
+        pattern_cells = maze.get_maze_pattern()
         print_maze(
             maze.get_maze(),
             entry_coord,

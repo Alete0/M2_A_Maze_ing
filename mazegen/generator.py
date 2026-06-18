@@ -7,7 +7,7 @@
 #   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/18 10:34:10 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/18 12:58:15 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -324,3 +324,9 @@ class MazeGenerator:
                     # Apply bitwise OR to set the WEST bit (0b1000)
                     # on the eastern neighbor
                     self._maze[r + 1][c + 2] |= self.WEST
+
+    def get_maze_pattern(self) -> set[tuple[int, int]]:
+        if self._pattern_fits:
+            return set(self.pattern)
+        else:
+            return set()
