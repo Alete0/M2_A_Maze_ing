@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   parser.py                                            :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:18 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/18 10:25:57 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/18 15:10:49 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -55,7 +55,7 @@ def load_config(file_path: str) -> MazeConfig:
         SystemExit: If the file is missing, malformed, or contains
         invalid values.
     """
-    config_data = {}
+    config_data: dict[str, str] = {}
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -69,7 +69,10 @@ def load_config(file_path: str) -> MazeConfig:
                                      "Missing '='.")
 
                 key, val = clean_line.split('=', 1)
-                config_data[key.strip().upper()] = val.strip()
+                if key.strip().upper() in config_data.keys():
+                    continue
+                else:
+                    config_data[key.strip().upper()] = val.strip()
 
     except FileNotFoundError:
         print(f"Error: Configuration file '{file_path}' not found.",

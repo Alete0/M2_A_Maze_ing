@@ -28,8 +28,8 @@ The program reads a plain text file (default: `config.txt`). Lines starting with
 - `SEED`: Integer for reproducible generation (e.g., `SEED=42`).
 
 ## Maze Generation Algorithm
-**Chosen Algorithm:** Recursive Backtracker (Depth-First Search).
-**Why we chose this algorithm:** The project strictly requires the capability to generate "perfect" mazes (a single valid path between the entry and exit). Recursive Backtracker naturally yields a spanning tree, ensuring total connectivity without isolated cells or inaccessible areas. It is computationally predictable and its implementation through recursive DFS is highly defensible during peer evaluation.
+**Chosen Algorithm:** Iterative Backtracker (Depth-First Search).
+**Why we chose this algorithm:** The project strictly requires the capability to generate "perfect" mazes (a single valid path between the entry and exit). Iterative Backtracker naturally yields a spanning tree, ensuring total connectivity without isolated cells or inaccessible areas. It is computationally predictable and its implementation through Iterative DFS is highly defensible during peer evaluation.
 
 ## Code Reusability
 The core generation and solving logic is strictly isolated in the `mazegen` package, completely independent of the CLI parser or hex encoder. 
@@ -59,7 +59,7 @@ solution = solver.get_directions() # Returns 'N', 'E', 'S', 'W' path string
 ### References
 
 - [Mazes — CMU student guide](https://www.cs.cmu.edu/~112-n22/notes/student-tp-guides/Mazes.pdf) — maze representation, wall encoding, and general maze concepts.
-- [Maze generation algorithm recap — Jamis Buck](https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap.html) — overview of maze generation algorithms; we used this to choose and justify Recursive Backtracker.
+- [Maze generation algorithm recap — Jamis Buck](https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap.html) — overview of maze generation algorithms; we used this to choose and justify Iterative Backtracker.
 - [Solve a maze with BFS — Medium article](https://medium.com/@luthfisauqi17_68455/artificial-intelligence-search-problem-solve-maze-using-breadth-first-search-bfs-algorithm-255139c6e1a3) — shortest-path search; informed our BFS-based `MazeSolver`.
 
 ### Use of AI
@@ -78,7 +78,7 @@ Gemini helped us with:
 
 | Area | Primary owner | Notes |
 |------|---------------|-------|
-| `mazegen/generator.py` | **czuluaga** | Recursive Backtracker, pattern 42, density rules, perfect/imperfect modes |
+| `mazegen/generator.py` | **czuluaga** | Iterative Backtracker, pattern 42, density rules, perfect/imperfect modes |
 | `mazegen/solver.py` | **czuluaga** | BFS shortest path, N/E/S/W direction string |
 | `parser.py` | **alejandr** | Config format, validation, error handling |
 | `tests/` | **alejandr** | Unit and integration tests across all modules |
@@ -107,7 +107,7 @@ We are both on-site 42 students and coordinated **in person** during lab session
 
 ### What worked / what we would improve
 
-**Worked well:** planning before coding; isolating `mazegen` from the CLI; tests catching regressions early; Recursive Backtracker matching the perfect-maze requirement.
+**Worked well:** planning before coding; isolating `mazegen` from the CLI; tests catching regressions early; Iterative Backtracker matching the perfect-maze requirement.
 
 **To improve:** run full-project `make lint` earlier; finalize README sections (Resources, team roles) during development, not at the end.
 

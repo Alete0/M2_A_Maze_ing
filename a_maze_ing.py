@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   a_maze_ing.py                                        :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/18 13:02:58 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/18 15:26:19 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -241,6 +241,9 @@ if __name__ == "__main__":
         else:
             _ = system('clear')
         pattern_cells = maze.get_maze_pattern()
+        if not pattern_cells:
+            print("Error: Maze size too small to fit the '42' pattern.",
+                  file=sys.stderr)
         print_maze(
             maze.get_maze(),
             entry_coord,

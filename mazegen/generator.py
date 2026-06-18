@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   generator.py                                         :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/18 12:58:15 by czuluaga           ###   ########.fr      #
+#   Updated: 2026/06/18 15:23:59 by alejandr           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -17,6 +17,10 @@ import sys
 
 class InvalidPlacementError(Exception):
     """Raised when ENTRY or EXIT is on the '42' pattern."""
+
+
+class InvalidConfiguration(Exception):
+    """Raised when WIDTH or HEIGHT is too large"""
 
 
 class MazeGenerator:
@@ -34,6 +38,12 @@ class MazeGenerator:
                                        for _ in range(height)]
         self._width: int = width
         self._height: int = height
+        if self._width > 1000:
+            raise InvalidConfiguration("WIDTH is too large, MAX=1000")
+
+        if self._height > 1000:
+            raise InvalidConfiguration("HEIGHT is too large, MAX=1000")
+
         self._seed: int | None = seed
         self._perfect: bool = perfect
         self._pattern_fits: bool = True
