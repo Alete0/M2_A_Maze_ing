@@ -32,5 +32,6 @@ maze.txt
 # Subject validator (provided separately, not part of submission)
 output_validator.py
 
+# more
 en.subject.pdf
 tests/
