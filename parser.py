@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   parser.py                                            :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:18 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/16 11:09:07 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/18 10:25:57 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -29,9 +29,8 @@ class MazeConfig:
     seed: Optional[int] = None
 
 
-def parse_coord(
-        coord_str: str, w: int, h: int, key_name: str
-        ) -> Coord:
+def parse_coord(coord_str: str, w: int, h: int, key_name: str
+                ) -> Coord:
     parts = coord_str.split(',')
     if len(parts) != 2:
         raise ValueError(f"Format {key_name} invalid."

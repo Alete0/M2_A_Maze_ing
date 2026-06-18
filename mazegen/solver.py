@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   solver.py                                            :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/12 10:50:56 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/13 15:34:23 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/18 10:24:43 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -35,7 +35,7 @@ class MazeSolver:
     NORTH: int = 0b0001
     EAST: int = 0b0010
     SOUTH: int = 0b0100
-    WEST:  int = 0b1000
+    WEST: int = 0b1000
 
     @staticmethod
     def neighbor_coords(current_location: tuple[int, int],

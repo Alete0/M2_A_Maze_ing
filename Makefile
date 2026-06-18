@@ -5,16 +5,16 @@ CONFIG = config.txt
 .PHONY: install run debug clean lint lint-strict build test
 
 install:
-	$(PYTHON) -m pip install -e ".[dev]"
+	poetry install
 
 test:
-	$(PYTHON) -m pytest tests/ -v
+	poetry run $(PYTHON) -m pytest tests/ -v
 
 run:
-	$(PYTHON) $(MAIN) $(CONFIG)
+	poetry run $(PYTHON) $(MAIN) $(CONFIG)
 
 debug:
-	$(PYTHON) -m pdb $(MAIN) $(CONFIG)
+	poetry run $(PYTHON) -m pdb $(MAIN) $(CONFIG)
 
 clean:
 	rm -rf __pycache__ .mypy_cache build/ dist/ *.egg-info/
@@ -22,13 +22,13 @@ clean:
 	find . -type f -name "*.pyc" -delete
 
 lint:
-	flake8 .
-	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	poetry run flake8 .
+	poetry run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	flake8 .
-	mypy . --strict
+	poetry run flake8 .
+	poetry run mypy . --strict
 
 build: clean
-	$(PYTHON) -m build
+	poetry build
 	cp dist/mazegen-*.whl .

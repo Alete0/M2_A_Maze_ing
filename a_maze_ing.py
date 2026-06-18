@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   a_maze_ing.py                                        :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:14:34 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/13 16:45:31 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/18 10:24:25 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -18,12 +18,13 @@ from mazegen.solver import NoSolutionError
 from parser import MazeConfig, load_config
 from typing import Set, Tuple
 from encoder import gen_maze_file
+from os import system, name
 
 # BITMASKS
 NORTH: int = 0b0001
 EAST: int = 0b0010
 SOUTH: int = 0b0100
-WEST:  int = 0b1000
+WEST: int = 0b1000
 
 
 # Type alias matching your project specifications
@@ -235,6 +236,10 @@ if __name__ == "__main__":
     exit_coord = (config.exit[1], config.exit[0])
 
     while True:
+        if name == 'nt':
+            _ = system('cls')
+        else:
+            _ = system('clear')
         pattern_cells = (
             set(maze.pattern) if maze._pattern_fits else set()
         )

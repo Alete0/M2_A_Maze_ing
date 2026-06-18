@@ -4,10 +4,10 @@
 #                                                          :::      ::::::::  #
 #   generator.py                                         :+:      :+:    :+:  #
 #                                                      +:+ +:+         +:+    #
-#   By: alejandr <alejandr@student.42malaga.com>     +#+  +:+       +#+       #
+#   By: czuluaga <czuluaga@student.42malaga.com>     +#+  +:+       +#+       #
 #                                                  +#+#+#+#+#+   +#+          #
 #   Created: 2026/06/11 10:09:14 by czuluaga            #+#    #+#            #
-#   Updated: 2026/06/16 09:42:41 by alejandr           ###   ########.fr      #
+#   Updated: 2026/06/18 10:34:10 by czuluaga           ###   ########.fr      #
 #                                                                             #
 # ########################################################################### #
 
@@ -42,7 +42,7 @@ class MazeGenerator:
     NORTH: int = 0b0001
     EAST: int = 0b0010
     SOUTH: int = 0b0100
-    WEST:  int = 0b1000
+    WEST: int = 0b1000
 
     pattern: list[tuple[int, int]] = [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2),
                                       (3, 2), (4, 2), (0, 4), (0, 5), (0, 6),
@@ -292,7 +292,7 @@ class MazeGenerator:
                 # (EAST walls = 0b0010)
                 for sub_r in range(r, r + 3):
                     for sub_c in range(c, c + 2):
-                        if (self._maze[sub_r][sub_c] & 0b0010) != 0:
+                        if (self._maze[sub_r][sub_c] & self.EAST) != 0:
                             is_3x3_open = False
                             break
                     if not is_3x3_open:
@@ -305,7 +305,7 @@ class MazeGenerator:
                 # (SOUTH walls = 0b0100)
                 for sub_r in range(r, r + 2):
                     for sub_c in range(c, c + 3):
-                        if (self._maze[sub_r][sub_c] & 0b0100) != 0:
+                        if (self._maze[sub_r][sub_c] & self.SOUTH) != 0:
                             is_3x3_open = False
                             break
                     if not is_3x3_open:
@@ -319,8 +319,8 @@ class MazeGenerator:
 
                     # Apply bitwise OR to set the EAST bit (0b0010)
                     # on the center cell
-                    self._maze[r + 1][c + 1] |= 0b0010
+                    self._maze[r + 1][c + 1] |= self.EAST
 
                     # Apply bitwise OR to set the WEST bit (0b1000)
                     # on the eastern neighbor
-                    self._maze[r + 1][c + 2] |= 0b1000
+                    self._maze[r + 1][c + 2] |= self.WEST
