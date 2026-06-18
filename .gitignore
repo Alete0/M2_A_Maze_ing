@@ -24,9 +24,12 @@ build/
 dist/
 *.egg-info/
 *.egg
+*.whl
 
 # Generated maze output
 maze.txt
 
 # Subject validator (provided separately, not part of submission)
 output_validator.py
+
+en.subject.pdf

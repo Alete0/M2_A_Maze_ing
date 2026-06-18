@@ -17,7 +17,7 @@ debug:
 	poetry run $(PYTHON) -m pdb $(MAIN) $(CONFIG)
 
 clean:
-	rm -rf __pycache__ .mypy_cache build/ dist/ *.egg-info/
+	rm -rf __pycache__ .mypy_cache build/ dist/ *.egg-info/ .pytest_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
